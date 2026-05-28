@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>libro — social preview</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --text-muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --purple: #bc8cff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1280px; height: 640px; overflow: hidden; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; color: var(--text); }
+  .card {
+    width: 1280px; height: 640px; position: relative;
+    background:
+      radial-gradient(circle at 18% 28%, rgba(88,166,255,0.10) 0%, transparent 45%),
+      radial-gradient(circle at 82% 78%, rgba(188,140,255,0.08) 0%, transparent 50%),
+      var(--bg);
+    padding: 80px 96px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .top { display: flex; align-items: center; gap: 18px; font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 18px; color: var(--text-muted); letter-spacing: 0.02em; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); box-shadow: 0 0 12px rgba(63,185,80,0.6); }
+  .top .sep { color: var(--border); }
+  .mid { display: flex; align-items: baseline; gap: 28px; margin-top: 8px; }
+  .wordmark { font-size: 188px; font-weight: 800; color: #fff; letter-spacing: -0.04em; line-height: 0.95; }
+  .wordmark .dot-accent { color: var(--accent); }
+  .tag { font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 22px; color: var(--accent); background: rgba(88,166,255,0.10); border: 1px solid rgba(88,166,255,0.32); padding: 6px 16px; border-radius: 999px; transform: translateY(-44px); white-space: nowrap; }
+  .tagline { font-size: 36px; font-weight: 500; color: var(--text); line-height: 1.25; max-width: 920px; margin-top: 24px; letter-spacing: -0.01em; }
+  .tagline .em { color: var(--accent); }
+  .bottom { display: flex; justify-content: space-between; align-items: flex-end; gap: 32px; }
+  .features { display: flex; gap: 14px; flex-wrap: wrap; }
+  .chip { font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 18px; color: var(--text-muted); background: var(--surface); border: 1px solid var(--border); padding: 10px 18px; border-radius: 8px; }
+  .chip .num { color: #fff; font-weight: 700; }
+  .meta { text-align: right; font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 18px; color: var(--text-muted); line-height: 1.6; }
+  .meta .url { color: #fff; font-weight: 600; }
+  /* book-stack motif right side, subtle */
+  .stack { position: absolute; right: 96px; top: 132px; display: flex; flex-direction: column; gap: 10px; opacity: 0.55; }
+  .spine { height: 22px; border-radius: 3px; }
+  .spine.a { width: 260px; background: linear-gradient(90deg, rgba(88,166,255,0.55), rgba(88,166,255,0.12)); }
+  .spine.b { width: 220px; background: linear-gradient(90deg, rgba(188,140,255,0.55), rgba(188,140,255,0.12)); }
+  .spine.c { width: 280px; background: linear-gradient(90deg, rgba(63,185,80,0.50), rgba(63,185,80,0.10)); }
+  .spine.d { width: 200px; background: linear-gradient(90deg, rgba(201,209,217,0.40), rgba(201,209,217,0.08)); }
+  .spine.e { width: 240px; background: linear-gradient(90deg, rgba(88,166,255,0.40), rgba(88,166,255,0.08)); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div>
+    <div class="top">
+      <span class="dot"></span>
+      <span>github.com/cerebrocybersolutions/libro</span>
+      <span class="sep">·</span>
+      <span>Apache 2.0</span>
+    </div>
+    <div class="mid">
+      <div class="wordmark">libro<span class="dot-accent">.</span></div>
+      <div class="tag">v0.2.0-alpha</div>
+    </div>
+    <div class="tagline">An opinionated Ops scaffold for <span class="em">Claude Code</span>. Five profiles, seven shipped skills, full session rituals — clone and run.</div>
+  </div>
+  <div class="bottom">
+    <div class="features">
+      <div class="chip"><span class="num">5</span> install profiles</div>
+      <div class="chip"><span class="num">7</span> shipped skills</div>
+      <div class="chip">advisor · council · orchestrator</div>
+      <div class="chip">idempotent install</div>
+    </div>
+    <div class="meta">
+      <div><span class="url">git clone</span> · <span class="url">bash install.sh</span></div>
+      <div>cerebrocybersolutions</div>
+    </div>
+  </div>
+  <div class="stack">
+    <div class="spine a"></div>
+    <div class="spine b"></div>
+    <div class="spine c"></div>
+    <div class="spine d"></div>
+    <div class="spine e"></div>
+  </div>
+</div>
+</body>
+</html>
