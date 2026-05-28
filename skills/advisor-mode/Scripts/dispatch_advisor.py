@@ -96,8 +96,19 @@ def get_topology(tier: str, local: bool, compare: bool) -> str:
                                                   # (Tier C/B solo, A+ solo, A --local degraded)
 
 # Auto-detect from script location; override with CEREBRO_BRAIN_ROOT env var if needed.
-# Script lives at: <BRAIN_ROOT>/skills/advisor-dispatch/Scripts/dispatch_advisor.py → parents[3] = <BRAIN_ROOT>
-BRAIN_ROOT = Path(os.environ.get("CEREBRO_BRAIN_ROOT") or str(Path(__file__).resolve().parents[3]))
+# Workspace layout:  <BRAIN_ROOT>/skills/<x>/Scripts/this.py     → parents[3] = <BRAIN_ROOT>
+# Installed layout:  <target>/.claude/skills/<x>/Scripts/this.py → parents[3] = <target>/.claude
+#                    (Brain root for installed targets is the sibling master-brain/ dir.)
+def _resolve_brain_root() -> Path:
+    env = os.environ.get("CEREBRO_BRAIN_ROOT") or os.environ.get("CEREBRO_ROOT")
+    if env:
+        return Path(env).expanduser().resolve()
+    p = Path(__file__).resolve().parents[3]
+    if p.name == ".claude" and (p.parent / "master-brain").exists():
+        return p.parent / "master-brain"
+    return p
+
+BRAIN_ROOT = _resolve_brain_root()
 LOG_DIR    = BRAIN_ROOT / "skills" / "advisor-dispatch" / "logs"
 LOG_FILE   = LOG_DIR / "daily_usage.md"
 
@@ -110,9 +121,7 @@ def _load_fleet_dispatch():
     global _FLEET_CACHE
     if _FLEET_CACHE is not None:
         return _FLEET_CACHE
-    brain_root = Path(os.environ.get("CEREBRO_BRAIN_ROOT")
-                      or os.environ.get("CEREBRO_ROOT")
-                      or Path(__file__).resolve().parents[3])
+    brain_root = _resolve_brain_root()
     # Try installed path first, fall back to template (operator has not yet
     # populated their local fleet config), fall back to None (cloud-only mode).
     candidates = [

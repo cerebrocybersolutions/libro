@@ -50,12 +50,44 @@ jobs:
         run: |
           bash install.sh --profile ${{ matrix.profile }} --target "$RUNNER_TEMP/libro-${{ matrix.profile }}" --yes
 
-      - name: Verify skill count matches manifest
+      - name: Verify installed manifest matches profile manifest chain
         run: |
-          expected=$(python3 -c "import json; print(len(json.load(open('manifests/${{ matrix.profile }}.json'))['skills']))")
-          actual=$(ls "$RUNNER_TEMP/libro-${{ matrix.profile }}/.claude/skills/" | wc -l | tr -d ' ')
-          echo "expected=$expected actual=$actual"
-          [ "$expected" = "$actual" ]
+          # Profile manifests store skills under additive_modules.skills and
+          # may declare parent_profile chains. The post-install
+          # .libro-manifest.json has the resolved flat list at installed_skills.
+          # Compare the resolved counts.
+          python3 - <<PY
+          import json, os, sys
+          from pathlib import Path
+          repo = Path('.')
+          target = Path(os.environ['RUNNER_TEMP']) / f"libro-${{ matrix.profile }}"
+          profile = '${{ matrix.profile }}'
+
+          def chain(name):
+            seen, out = set(), []
+            while name and name not in seen:
+              seen.add(name)
+              p = json.loads((repo / 'manifests' / f'{name}.json').read_text())
+              out.append(p)
+              name = p.get('parent_profile')
+            return out
+
+          expected_skills = []
+          for p in reversed(chain(profile)):
+            expected_skills.extend(p.get('additive_modules', {}).get('skills', []))
+          expected_skills = sorted(set(expected_skills))
+
+          installed = json.loads((target / '.libro-manifest.json').read_text())
+          actual_skills = sorted(installed.get('installed_skills', []))
+
+          on_disk = sorted(p.name for p in (target / '.claude' / 'skills').iterdir() if p.is_dir())
+
+          print(f"expected={len(expected_skills)} installed_manifest={len(actual_skills)} on_disk={len(on_disk)}")
+          if expected_skills != actual_skills:
+            print('DRIFT manifest:', set(expected_skills) ^ set(actual_skills)); sys.exit(1)
+          if sorted(actual_skills) != on_disk:
+            print('DRIFT on-disk:', set(actual_skills) ^ set(on_disk)); sys.exit(1)
+          PY
 
       - name: Run cerebro-doctor
         run: |
