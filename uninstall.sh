@@ -66,6 +66,7 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --target)    TARGET_DIR="$2"; shift 2 ;;
         --dry-run)   DRY_RUN=1; shift ;;
+        --yes|-y)    shift ;;  # no-op, accepted for CI / non-interactive use
         --help|-h)   usage; exit 0 ;;
         *)           _error "Unknown option: $1"; usage; exit 1 ;;
     esac

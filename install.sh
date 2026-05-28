@@ -105,6 +105,7 @@ while [[ $# -gt 0 ]]; do
         --doctor)        DOCTOR_ONLY=1; shift ;;
         --strict)        STRICT=1; shift ;;
         --bundle-sha)    BUNDLE_SHA="$2"; shift 2 ;;
+        --yes|-y)        shift ;;  # no-op, accepted for CI / non-interactive use
         --help|-h)       usage; exit 0 ;;
         *)               _error "Unknown option: $1"; usage; exit 1 ;;
     esac
