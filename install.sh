@@ -80,7 +80,7 @@ Options:
   --rollback             Restore Brain from the most recent .libro-backup-* snapshot
   --doctor               Run cerebro-doctor health check only (no install)
   --strict               Treat doctor warnings as errors (exit non-zero on any warning)
-  --bundle-sha <sha256>  SHA256 of the source tarball; recorded in .libro-manifest.json extra
+  --bundle-sha <sha256>  Optional source/archive SHA256; recorded in .libro-manifest.json extra
   --help                 Show this help
 
 Examples:
