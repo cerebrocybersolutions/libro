@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cerebrocybersolutions.com/schemas/libro/profile.schema.json",
+  "title": "Libro Install Profile",
+  "description": "JSON Schema for Libro install-profile manifests. Every manifest under manifests/ MUST validate against this schema.",
+  "type": "object",
+  "required": [
+    "name",
+    "version",
+    "parent_profile",
+    "audience",
+    "additive_modules",
+    "landing_copy"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional JSON Schema reference (relative or absolute URL). Lets editors validate manifests inline. Not enforced; ignored by the parity validator."
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^libro-[a-z][a-z0-9-]*$",
+      "description": "Profile identifier in kebab-case prefixed `libro-`. Examples: libro-core, libro-govcon."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-z0-9.-]+)?$",
+      "description": "Profile version (semver). Bumps when manifest contents change."
+    },
+    "spec_version": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Profile schema version this manifest conforms to. Locked at 1.0.0; bumps when this schema changes."
+    },
+    "parent_profile": {
+      "type": ["string", "null"],
+      "description": "Profile this one extends. `libro-core` is the root and has parent_profile: null. All vertical profiles MUST set parent_profile: 'libro-core'."
+    },
+    "audience": {
+      "type": "string",
+      "description": "ICP target for this profile. Drives landing-copy variant selection and starter skill choice."
+    },
+    "additive_modules": {
+      "type": "object",
+      "description": "Modules added on top of parent_profile. libro-core lists its full module set here (parent_profile=null). Vertical profiles list ONLY the additions on top of libro-core.",
+      "additionalProperties": false,
+      "properties": {
+        "skills": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "uniqueItems": true,
+          "description": "Skill names matching skills/<name>/. Each skill must pass the externalization pre-commit hook before merge. Skills that ship with the Claude host platform (rather than with Libro) are declared in host_provided_dependencies instead."
+        },
+        "brain_scaffold": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true,
+          "description": "Brain folder paths to template into the install (e.g., master-brain/CLAUDE.md, master-brain/awareness.md). All entries are operator-generic — populate at install time from the operator profile."
+        },
+        "doctrine": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Doctrine documents shipped with the profile."
+        },
+        "runner_components": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Bash runner pieces this profile contributes (e.g., install.sh, doctor extension). libro-core ships the base runner; verticals can extend."
+        }
+      }
+    },
+    "landing_copy": {
+      "type": "string",
+      "description": "Path (relative to the repo root) to the landing-copy template variant for this profile."
+    },
+    "starter_skill_optional": {
+      "type": ["string", "null"],
+      "description": "Optional first-run skill the buyer can invoke on day 1. Examples: govcon-find-solicitations, content-first-post, ops-first-brief. null for libro-core (no vertical-specific starter)."
+    },
+    "host_provided_dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["skill", "host_provided"],
+        "additionalProperties": false,
+        "properties": {
+          "skill": { "type": "string" },
+          "host_provided": { "type": "boolean" },
+          "_note": { "type": "string" }
+        }
+      },
+      "description": "Skills the profile assumes are present on the Claude host platform (e.g., Claude Code built-ins or platform plugins). Libro does NOT package these — they ship with the host. The doctor surfaces a warning if a host-provided dependency is missing post-install."
+    },
+    "excluded_paths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Paths explicitly NOT shipped (defense-in-depth alongside the externalization pre-commit hook). Examples: paths that contain operator-internal records, handoffs, or memory storage."
+    },
+    "bundle_size_goal": {
+      "type": "object",
+      "description": "Targets used by build-bundle.sh to detect drift. Soft warnings only.",
+      "additionalProperties": false,
+      "properties": {
+        "max_skills": { "type": "integer", "minimum": 1 },
+        "max_install_seconds": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "_note": {
+      "type": "string",
+      "description": "Free-form authoring note. Not validated."
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "../profile.schema.json",
+  "spec_version": "1.0.0",
+  "name": "libro-core",
+  "version": "0.2.0-alpha",
+  "parent_profile": null,
+  "audience": "First-time install — solopreneurs and small-team operators evaluating 'is Libro for me?'. Non-technical-friendly.",
+  "additive_modules": {
+    "skills": [
+      "brain-setup",
+      "sessionstart",
+      "sessionend",
+      "ceo-brief",
+      "cerebro-doctor",
+      "memory-attribution-lint",
+      "skill-manage"
+    ],
+    "brain_scaffold": [
+      "master-brain/CLAUDE.md",
+      "master-brain/decisions/decisions.md",
+      "master-brain/awareness.md",
+      "master-brain/DASHBOARD.md",
+      "govcon/CLAUDE.md",
+      "content-creation/CLAUDE.md",
+      "products/CLAUDE.md",
+      "cyber-services/CLAUDE.md",
+      "training/CLAUDE.md"
+    ],
+    "runner_components": [
+      "install.sh",
+      "cerebro-doctor"
+    ]
+  },
+  "price_tier": "free",
+  "landing_copy": "templates/landing/landing-copy-core.md",
+  "starter_skill_optional": null,
+  "host_provided_dependencies": [],
+  "excluded_paths": [
+    "tools/",
+    "state/fleet-dispatch.json"
+  ],
+  "bundle_size_goal": {
+    "max_skills": 15,
+    "max_install_seconds": 60
+  },
+  "_note": "libro-core is the root profile — every vertical profile (libro-govcon, libro-creator, libro-ops, libro-full) is a strict superset. Fleet config replaced with state/fleet-dispatch.template.json (placeholder; the doctor walks the operator through populating). decisions/ scaffold ships with the 6-section template only — no operator-specific decision docs travel."
+}

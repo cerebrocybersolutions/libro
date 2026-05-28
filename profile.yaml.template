@@ -1,0 +1,28 @@
+# Cerebro operator profile — read by advisor-mode at runtime
+# Substituted into LLM system prompts via {{key}} placeholders.
+#
+# After install: copy to ~/.cerebro/profile.yaml and fill in your values.
+#   mkdir -p ~/.cerebro && cp profile.yaml.template ~/.cerebro/profile.yaml
+#   $EDITOR ~/.cerebro/profile.yaml
+#
+# Format: key: value (one per line, no nesting, # comments OK)
+# Not a credential file — public business identifiers only.
+
+# Your company / DBA name (e.g., "Acme Consulting LLC")
+company_name:
+
+# Your government contracting identifiers (skip if not a GovCon)
+# CAGE Code: 5-character alphanumeric from SAM.gov registration
+cage_code:
+# UEI: 12-character unique entity identifier from SAM.gov
+uei_code:
+# Set-aside designation (e.g., "SDVOSB set-aside", "8(a)", "WOSB", or leave blank)
+set_aside_type:
+
+# Operator identity
+operator_name:
+operator_email:
+
+# Filesystem root for your Brain — typically the workspace directory
+# Example: /Users/you/Projects/your-company
+brain_root:

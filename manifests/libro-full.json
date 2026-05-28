@@ -1,0 +1,39 @@
+{
+  "$schema": "../profile.schema.json",
+  "spec_version": "1.0.0",
+  "name": "libro-full",
+  "version": "0.2.0-alpha",
+  "parent_profile": "libro-core",
+  "audience": "Libro power users and partners who want the full Libro-eligible skill surface. The operator is expected to be comfortable with the full Brain architecture, session rituals, and dispatch.",
+  "additive_modules": {
+    "skills": [
+      "advisor-mode",
+      "council-mode",
+      "orchestrator-mode"
+    ],
+    "brain_scaffold": [],
+    "runner_components": []
+  },
+  "price_tier": "free",
+  "landing_copy": "templates/landing/landing-copy-full.md",
+  "starter_skill_optional": "ceo-brief",
+  "host_provided_dependencies": [],
+  "bundle_size_goal": {
+    "max_skills": 40,
+    "max_install_seconds": 180
+  },
+  "_note": "libro-full extends libro-core with the dispatch trinity (advisor-mode, council-mode, orchestrator-mode). Additional skills (dashboard-view, brain-hygiene, cross-dept-decisions, dept-activation, content-pipeline, marketing-orchestrator, scroll-stop-prompter, govcon-workflow, cerebro-agency-pipeline, decision-scaffold, mobile-planning-capture) are deferred to a later release — they land here only after passing the externalization pre-commit hook.",
+  "_deferred_skills": [
+    "dashboard-view",
+    "brain-hygiene",
+    "cross-dept-decisions",
+    "dept-activation",
+    "content-pipeline",
+    "marketing-orchestrator",
+    "scroll-stop-prompter",
+    "govcon-workflow",
+    "cerebro-agency-pipeline",
+    "decision-scaffold",
+    "mobile-planning-capture"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "../profile.schema.json",
+  "spec_version": "1.0.0",
+  "name": "libro-creator",
+  "version": "0.2.0-alpha",
+  "parent_profile": "libro-core",
+  "audience": "Solopreneur content creators and marketing operators. Needs a content pipeline — editorial calendar, scroll-stop hooks, email cadence, and LinkedIn / YouTube publishing workflows.",
+  "additive_modules": {
+    "skills": [],
+    "brain_scaffold": [],
+    "runner_components": []
+  },
+  "price_tier": "free",
+  "landing_copy": "templates/landing/landing-copy-creator.md",
+  "starter_skill_optional": null,
+  "host_provided_dependencies": [],
+  "bundle_size_goal": {
+    "max_skills": 20,
+    "max_install_seconds": 90
+  },
+  "_note": "libro-creator extends libro-core. Creator-specific skills are deferred to a later release — they land here only after passing the externalization pre-commit hook. Operator brand voice + ICP are loaded from the operator's profile at runtime.",
+  "_deferred_skills": [
+    "content-pipeline",
+    "marketing-orchestrator",
+    "scroll-stop-prompter"
+  ]
+}

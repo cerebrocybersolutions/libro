@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  com.cerebro.doctor.daily.plist — launchd template for the cerebro-doctor
+  Phase 3 daily cron. Ships as a .template so Claude Code can substitute the
+  two site-specific paths before installing.
+
+  Install procedure (Claude Code surface — SOP v1.1 §Ollama/FS-outside):
+
+    1. Copy this file to:
+         ~/Library/LaunchAgents/com.cerebro.doctor.daily.plist
+    2. Replace the two {{...}} tokens with absolute Mac FS paths:
+         {{WORKSPACE_ROOT}}   — e.g., /Users/operator/libro-workspace
+         {{LOG_DIR}}          — e.g., /Users/operator/Library/Logs/libro-doctor
+    3. Create the log directory:
+         mkdir -p {{LOG_DIR}}
+    4. macOS TCC (Full Disk Access) — REQUIRED if workspace is on ~/Desktop:
+         launchd-spawned processes cannot read ~/Desktop without FDA.
+         System Settings > Privacy & Security > Full Disk Access > "+" > /bin/bash
+         (use Cmd+Shift+G to navigate to /bin/bash in the file picker)
+         After granting FDA, you may need to restart the agent.
+    5. Load the agent (runs at next 06:15 local):
+         launchctl load ~/Library/LaunchAgents/com.cerebro.doctor.daily.plist
+    6. Verify:
+         launchctl list | grep com.cerebro.doctor.daily
+    7. Force an immediate dry-run (optional, validates paths + FDA grant):
+         launchctl start com.cerebro.doctor.daily
+         ls -la {{WORKSPACE_ROOT}}/master-brain/cerebro-doctor-reports/ | tail -3
+
+  Unload / rollback:
+    launchctl unload ~/Library/LaunchAgents/com.cerebro.doctor.daily.plist
+    rm ~/Library/LaunchAgents/com.cerebro.doctor.daily.plist
+
+  Scope contract (Least-Privilege #7):
+    - Runs as the operator's user (no sudo).
+    - Reads AGENTS.md + SKILL.md files under WORKSPACE_ROOT.
+    - Writes one file per day to master-brain/cerebro-doctor-reports/.
+    - Writes stdout/stderr to LOG_DIR (rotate via standard macOS newsyslog).
+    - No network, no git, no credentials.
+
+  Reversibility #5: unload + delete = complete removal. No orphan state.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.cerebro.doctor.daily</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>{{WORKSPACE_ROOT}}/master-brain/skills/cerebro-doctor/Scripts/run_daily.sh</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>CEREBRO_WORKSPACE_ROOT</key>
+        <string>{{WORKSPACE_ROOT}}</string>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin</string>
+    </dict>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>6</integer>
+        <key>Minute</key>
+        <integer>15</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>{{LOG_DIR}}/cerebro-doctor.stdout.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>{{LOG_DIR}}/cerebro-doctor.stderr.log</string>
+
+    <key>WorkingDirectory</key>
+    <string>/tmp</string>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>

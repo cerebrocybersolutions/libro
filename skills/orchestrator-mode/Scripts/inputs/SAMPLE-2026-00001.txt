@@ -1,0 +1,29 @@
+SOLICITATION NUMBER: SAMPLE-2026-00001
+TITLE: [Illustrative Sample] Commodity Parts Procurement
+AGENCY: [Sample Federal Agency]
+RESPONSE DUE: [YYYY-MM-DD]
+POSTED: [YYYY-MM-DD]
+NAICS: [primary NAICS, e.g., 334290]
+SET-ASIDE: [TBD or set-aside type — e.g., Total Small Business / SDVOSB / 8(a)]
+PLACE OF PERFORMANCE: [agency installation / location]
+PERIOD OF PERFORMANCE: [duration or one-time delivery]
+FSC CLASS: [FSC code]
+
+SCOPE SUMMARY:
+[One-paragraph scope summary. What is being procured, in what quantity, to what
+specification. This is the section the chain extracts facts from. The orchestrator
+chain runs decompose → extract_facts → fit_score → competitive_read → decision over
+text of this shape.]
+
+OPERATOR CONTEXT (read from operator profile at runtime):
+- The operator's set-aside posture (e.g., SDVOSB, 8(a), WOSB, HUBZone), primary
+  NAICS codes, and pursue-lane policy live in ~/.cerebro/profile.yaml. The chain
+  prepends these at runtime — they do not belong here.
+
+OPEN QUESTIONS THE CHAIN SHOULD SURFACE:
+1. NAICS acceptable to the operator's pursue policy?
+2. Set-aside favorable to the operator's designation?
+3. Response window realistic given operator capacity?
+4. Incumbents identifiable from public sources?
+
+— END OF STAGED INPUT —

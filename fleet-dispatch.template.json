@@ -1,0 +1,117 @@
+{
+  "version": "template-1.0",
+  "_note": "Libro operator fleet-dispatch template. Replace all {{PLACEHOLDER}} values at install time via install.sh. Three-tier resolver: normalize alias → tier → host, with catalog fallback.",
+  "resolution": {
+    "strategy": "normalize_then_resolve",
+    "_note": "Three-tier resolver: (1) normalize route alias to canonical tier, (2) resolve tier to host, (3) catalog fallback when LiteLLM down."
+  },
+  "policy": {
+    "origin": "{{ORIGIN_POLICY}}",
+    "us_only": true,
+    "excluded_origins": ["CN", "RU", "IR"],
+    "_note": "Replace us_only with operator policy. Default: US-origin models only; adjust excluded_origins per your own origin policy."
+  },
+  "traffic_routing": {
+    "default": "hub_litellm",
+    "fallback": "local_ollama",
+    "_note": "hub_litellm = operator's LiteLLM proxy. local_ollama = on-prem Ollama fleet."
+  },
+  "default_host": "{{LITELLM_HOST}}",
+  "hosts": {
+    "hub": {
+      "url": "{{LITELLM_URL}}",
+      "origin": "US",
+      "hostname": "{{HUB_HOSTNAME}}",
+      "status": "🟢 services-dock",
+      "notes": "LiteLLM proxy host. Set LITELLM_URL and LITELLM_MASTER_KEY in operator env."
+    },
+    "local_primary": {
+      "url": "{{LOCAL_OLLAMA_URL}}",
+      "origin": "US",
+      "hostname": "{{LOCAL_PRIMARY_HOSTNAME}}",
+      "status": "🟢 primary-muscle",
+      "notes": "Primary local inference node. Tailscale or LAN URL."
+    },
+    "local_fallback": {
+      "url": "{{LOCAL_FALLBACK_URL}}",
+      "origin": "US",
+      "hostname": "{{LOCAL_FALLBACK_HOSTNAME}}",
+      "status": "🟡 dormant-backup",
+      "notes": "Fallback local inference node. Resumes primary on primary node failure."
+    }
+  },
+  "routing": {
+    "C-local": {
+      "model": "{{OPERATOR_TIER_C}}",
+      "primary": "local_primary",
+      "fallback": "local_fallback",
+      "origin": "US",
+      "tier": "Operator",
+      "_note": "Fast/cheap tier. Default: llama3.1:8b or phi4:14b."
+    },
+    "B-local": {
+      "model": "{{OPERATOR_TIER_B}}",
+      "primary": "local_primary",
+      "fallback": "local_fallback",
+      "origin": "US",
+      "tier": "Team Lead",
+      "_note": "Mid-tier. Default: phi4:14b or gemma2:27b."
+    },
+    "A-local": {
+      "model": "{{OPERATOR_TIER_A}}",
+      "primary": "local_primary",
+      "fallback": "local_fallback",
+      "origin": "US",
+      "tier": "Senior Advisor",
+      "_note": "Heavy local tier. Default: gemma4:31b or llama3.3:70b."
+    },
+    "A-cloud": {
+      "model": "{{OPERATOR_CLOUD_MODEL}}",
+      "primary": "hub",
+      "fallback": "local_primary",
+      "origin": "US",
+      "tier": "Senior Advisor Cloud",
+      "_note": "Cloud frontier tier. Default: claude-sonnet-4-6 or gpt-4o."
+    },
+    "A+-cloud": {
+      "model": "{{OPERATOR_FRONTIER_MODEL}}",
+      "primary": "hub",
+      "fallback": "A-cloud",
+      "origin": "US",
+      "tier": "Frontier",
+      "_note": "Top-tier cloud. Default: claude-opus-4-6."
+    }
+  },
+  "env_override": {
+    "LITELLM_HOST": "{{LITELLM_HOST}}",
+    "LITELLM_MASTER_KEY": "{{LITELLM_MASTER_KEY}}",
+    "OLLAMA_HOST": "{{LOCAL_OLLAMA_URL}}",
+    "_note": "install.sh writes these from operator profile at install time."
+  },
+  "candidate_models": {
+    "_note": "Operator-customizable model roster. Add/remove per BYOM pattern.",
+    "us_validated": [
+      "gemma4:31b",
+      "phi4:14b",
+      "llama3.3:70b",
+      "llama3.1:8b",
+      "granite3.3:8b"
+    ]
+  },
+  "excluded_models": {
+    "reason": "origin-policy-3a",
+    "models": [
+      "mistral",
+      "falcon",
+      "qwen",
+      "deepseek",
+      "yi"
+    ]
+  },
+  "cost_caps": {
+    "daily_usd": "{{DAILY_COST_CAP}}",
+    "monthly_usd": "{{MONTHLY_COST_CAP}}",
+    "_note": "Set in operator profile. LiteLLM budget_manager enforces these."
+  },
+  "references": []
+}

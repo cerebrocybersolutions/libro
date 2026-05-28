@@ -1,0 +1,25 @@
+{
+  "$schema": "../profile.schema.json",
+  "spec_version": "1.0.0",
+  "name": "libro-govcon",
+  "version": "0.2.0-alpha",
+  "parent_profile": "libro-core",
+  "audience": "Federal contractors and small-set-aside businesses pursuing GovCon opportunities. Needs SAM.gov tracking, RFQ pipeline management, and pitch tooling.",
+  "additive_modules": {
+    "skills": [],
+    "brain_scaffold": [],
+    "runner_components": []
+  },
+  "price_tier": "free",
+  "landing_copy": "templates/landing/landing-copy-govcon.md",
+  "starter_skill_optional": null,
+  "host_provided_dependencies": [],
+  "bundle_size_goal": {
+    "max_skills": 20,
+    "max_install_seconds": 90
+  },
+  "_note": "libro-govcon extends libro-core. govcon-workflow skill is deferred to a later release — it ships templatized (CAGE / UEI / address / phone / email / NAICS loaded from operator profile at runtime, never hardcoded).",
+  "_deferred_skills": [
+    "govcon-workflow"
+  ]
+}

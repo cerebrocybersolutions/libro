@@ -1,0 +1,65 @@
+{
+  "name": "solicitation_eval",
+  "version": "1",
+  "description": "SAM.gov solicitation pursue/no-bid pipeline. Inputs: solicitation text/URL. Outputs: recommendation + rationale.",
+  "chain_budget": {
+    "max_escalations_total": 2,
+    "max_cost_usd": 0.25,
+    "halt_on_a_plus_failure": true
+  },
+  "subtasks": [
+    {
+      "id": "extract_facts",
+      "description": "Extract the following from the solicitation text and return ONLY a raw JSON object — no markdown fences, no prose preamble, no trailing commentary. The response must start with `{` and end with `}`. Required keys (all 6, all non-null): title (string), naics (string), set_aside (string; use 'unspecified' if not stated), deadline (string; ISO date or as written), pop (string; period of performance), scope (string; one-sentence scope summary). If a field is genuinely not stated in the text, use the string 'unspecified' rather than null or empty. Example valid output: {\"title\":\"Base Telephone Parts\",\"naics\":\"334290\",\"set_aside\":\"Total Small Business\",\"deadline\":\"2026-04-22\",\"pop\":\"one-time delivery\",\"scope\":\"USMC base telephone system parts one-time buy\"}",
+      "inputs": ["@task.text"],
+      "tier": "C-local",
+      "gate": {
+        "type": "json_schema",
+        "required_keys": ["title", "naics", "set_aside", "deadline", "pop", "scope"],
+        "description": "valid JSON with 6 non-null keys: title, naics, set_aside, deadline, pop, scope"
+      },
+      "escalate_to": "C-claude",
+      "max_escalations": 1
+    },
+    {
+      "id": "fit_score",
+      "description": "Using the extracted facts, score the operator's fit and return ONLY a raw JSON object — no markdown fences, no prose preamble, no trailing commentary. The response must start with `{` and end with `}`. Required keys (both, non-null): score (integer 1-10) and rationale (string, one paragraph). Score on a 1-10 scale considering: NAICS alignment vs. the operator's primary NAICS codes and approved adjacent lanes (read from ~/.cerebro/profile.yaml), set-aside preference vs. the operator's designation, size relative to operator capacity, and scope-to-capability match. Example valid output: {\"score\":7,\"rationale\":\"NAICS outside the operator's three primary codes but adjacent to an approved lane. Set-aside TBD but likely favorable to the operator's designation. Size fits operator capacity. Main risk: tight response window given current pipeline state.\"}",
+      "inputs": ["extract_facts"],
+      "tier": "B-claude",
+      "gate": {
+        "type": "json_schema",
+        "required_keys": ["score", "rationale"],
+        "description": "valid JSON with 2 non-null keys: score (integer 1-10), rationale (string)"
+      },
+      "escalate_to": "A-claude",
+      "max_escalations": 1
+    },
+    {
+      "id": "competitive_read",
+      "description": "Summarize what we can infer about incumbents or likely competitors. If none can be inferred from the available text, explicitly state 'no competitive signal in provided text'.",
+      "inputs": ["extract_facts"],
+      "tier": "C-claude",
+      "gate": {
+        "type": "length_range",
+        "min": 80,
+        "max": 1200,
+        "description": "between 80 and 1200 characters"
+      },
+      "escalate_to": "B-claude",
+      "max_escalations": 1
+    },
+    {
+      "id": "decision",
+      "description": "Based on the fit score, competitive read, and facts, recommend one of: PURSUE, NO-BID, NEED-MORE-INFO. Include a confidence level (1-5) and exactly 3 numbered reasons. No hedging — state the recommendation clearly.",
+      "inputs": ["extract_facts", "fit_score", "competitive_read"],
+      "tier": "A-claude",
+      "gate": {
+        "type": "contains",
+        "terms": ["Recommendation:", "Confidence:", "1.", "2.", "3."],
+        "description": "output contains 'Recommendation:', 'Confidence:', and 3 numbered reasons"
+      },
+      "escalate_to": "A+-claude",
+      "max_escalations": 1
+    }
+  ]
+}

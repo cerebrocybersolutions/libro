@@ -1,0 +1,28 @@
+{
+  "$schema": "../profile.schema.json",
+  "spec_version": "1.0.0",
+  "name": "libro-ops",
+  "version": "0.2.0-alpha",
+  "parent_profile": "libro-core",
+  "audience": "Ops-focused power users — operators who want Brain hygiene automation, dashboard rollup, cross-dept decision routing, and dept-activation scaffolding on top of libro-core.",
+  "additive_modules": {
+    "skills": [],
+    "brain_scaffold": [],
+    "runner_components": []
+  },
+  "price_tier": "free",
+  "landing_copy": "templates/landing/landing-copy-ops.md",
+  "starter_skill_optional": null,
+  "host_provided_dependencies": [],
+  "bundle_size_goal": {
+    "max_skills": 25,
+    "max_install_seconds": 120
+  },
+  "_note": "libro-ops extends libro-core. Ops-power-user skills (dashboard-view, brain-hygiene, cross-dept-decisions, dept-activation) are deferred to a later release.",
+  "_deferred_skills": [
+    "dashboard-view",
+    "brain-hygiene",
+    "cross-dept-decisions",
+    "dept-activation"
+  ]
+}

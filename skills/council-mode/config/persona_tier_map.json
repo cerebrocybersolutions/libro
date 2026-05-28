@@ -1,0 +1,78 @@
+{
+  "_meta": {
+    "version": "v1",
+    "notes": "Fixed mapping. Randomized-per-run deferred to v2. All prompt paths use kebab-case."
+  },
+  "personas": {
+    "sun-tzu": {
+      "slot": "A-claude",
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-6",
+      "lens": "strategic",
+      "era": "5th c. BC",
+      "tradition": "Ancient China",
+      "prompt_path": "personas/sun-tzu/system_prompt.md",
+      "voice_bank_path": "personas/sun-tzu/voice_bank.md",
+      "rationale": "Strategic clarity and clean structure fit A-tier Sonnet default."
+    },
+    "socrates": {
+      "slot": "B-claude",
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-5",
+      "lens": "interrogation",
+      "era": "5th c. BC",
+      "tradition": "Ancient Greece",
+      "prompt_path": "personas/socrates/system_prompt.md",
+      "voice_bank_path": "personas/socrates/voice_bank.md",
+      "rationale": "Iterative questioning benefits from mid-tier Sonnet with room for multiple cycles."
+    },
+    "marcus-aurelius": {
+      "slot": "A+-claude",
+      "provider": "anthropic",
+      "model": "claude-opus-4-7",
+      "lens": "self-governance",
+      "era": "2nd c. AD",
+      "tradition": "Ancient Rome",
+      "prompt_path": "personas/marcus-aurelius/system_prompt.md",
+      "voice_bank_path": "personas/marcus-aurelius/voice_bank.md",
+      "rationale": "Self-examination benefits from depth; Opus is the appropriate weight for the mirror-holding role."
+    },
+    "nietzsche": {
+      "slot": "B-local",
+      "provider": "ollama",
+      "model": "phi4:14b",
+      "lens": "value-critique",
+      "era": "19th c.",
+      "tradition": "Modern Germany",
+      "prompt_path": "personas/nietzsche/system_prompt.md",
+      "voice_bank_path": "personas/nietzsche/voice_bank.md",
+      "rationale": "Value-critique lens tests local-model register. phi4:14b (US/Microsoft, ~9GB Q4_K_M) retargeted from qwen2.5:14b per 2026-04-21 US-only fleet lock. Reasoning quality comparable; Phi's training corpus diverges sufficiently from Meta Llama for adversarial coverage. Absorbs the retired Heckler function via register."
+    },
+    "jung": {
+      "slot": "C-local",
+      "provider": "ollama",
+      "model": "llama3.1:8b",
+      "lens": "unconscious",
+      "era": "20th c.",
+      "tradition": "Modern Swiss",
+      "prompt_path": "personas/jung/system_prompt.md",
+      "voice_bank_path": "personas/jung/voice_bank.md",
+      "rationale": "Pattern-matching on archetype can run on a terse local model. Depth emerges across the council's full output, not from any single voice."
+    }
+  },
+  "rosters": {
+    "full": ["sun-tzu", "socrates", "marcus-aurelius", "nietzsche", "jung"],
+    "lean": ["sun-tzu", "nietzsche", "marcus-aurelius"]
+  },
+  "heartbeat": {
+    "cadence_seconds": 30,
+    "hooks": ["entry", "heartbeat", "completion", "critique"],
+    "source": "council-mode/Scripts/heartbeat.py"
+  },
+  "flags": {
+    "dialectic": {
+      "default": false,
+      "description": "Second-pass critique loop where each persona sees N-1 other drafts and may refine. Off by default to keep fast runs fast."
+    }
+  }
+}
