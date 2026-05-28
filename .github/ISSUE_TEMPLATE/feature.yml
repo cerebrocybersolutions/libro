@@ -1,0 +1,58 @@
+name: Feature request
+description: Propose a new feature, skill, or improvement
+title: "[feature] "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing a feature. Libro is opinionated and pre-1.0 — please read `README.md` and `CHANGELOG.md` first to confirm the request fits the project's shape.
+
+        **For new skills:** open this issue and propose the scope before writing code. See `CONTRIBUTING.md`.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the situation that makes you want this feature.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What you would like Libro to do. Be concrete — commands, file shapes, output expectations.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What workarounds or alternative approaches did you consider, and why did you reject them?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      description: Which part of Libro would this change touch?
+      options:
+        - installer (install.sh / uninstall.sh)
+        - profile manifests
+        - existing skill (specify in proposal)
+        - new skill (requires scope discussion)
+        - dispatch helpers (advisor / council / orchestrator)
+        - docs only
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+    validations:
+      required: false

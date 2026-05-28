@@ -1,0 +1,74 @@
+name: install-smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'install.sh'
+      - 'uninstall.sh'
+      - 'manifests/**'
+      - 'skills/**'
+      - 'lib/**'
+      - 'scaffold/**'
+      - '.github/workflows/install-smoke.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'install.sh'
+      - 'uninstall.sh'
+      - 'manifests/**'
+      - 'skills/**'
+      - 'lib/**'
+      - 'scaffold/**'
+      - '.github/workflows/install-smoke.yml'
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    name: install ${{ matrix.profile }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        profile:
+          - libro-core
+          - libro-creator
+          - libro-govcon
+          - libro-ops
+          - libro-full
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install profile
+        run: |
+          bash install.sh --profile ${{ matrix.profile }} --target "$RUNNER_TEMP/libro-${{ matrix.profile }}" --yes
+
+      - name: Verify skill count matches manifest
+        run: |
+          expected=$(python3 -c "import json; print(len(json.load(open('manifests/${{ matrix.profile }}.json'))['skills']))")
+          actual=$(ls "$RUNNER_TEMP/libro-${{ matrix.profile }}/.claude/skills/" | wc -l | tr -d ' ')
+          echo "expected=$expected actual=$actual"
+          [ "$expected" = "$actual" ]
+
+      - name: Run cerebro-doctor
+        run: |
+          python3 "$RUNNER_TEMP/libro-${{ matrix.profile }}/.claude/skills/cerebro-doctor/Scripts/doctor.py"
+
+      - name: Uninstall + residual probe
+        run: |
+          bash uninstall.sh --target "$RUNNER_TEMP/libro-${{ matrix.profile }}" --yes
+          if [ -d "$RUNNER_TEMP/libro-${{ matrix.profile }}/.claude/skills" ]; then
+            count=$(ls "$RUNNER_TEMP/libro-${{ matrix.profile }}/.claude/skills/" 2>/dev/null | wc -l | tr -d ' ')
+            if [ "$count" != "0" ]; then
+              echo "RESIDUAL: $count files left after uninstall"
+              exit 1
+            fi
+          fi
+          echo "uninstall clean"

@@ -1,0 +1,80 @@
+name: Bug report
+description: Something in Libro is broken or behaves unexpectedly
+title: "[bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill out the fields below so we can reproduce and fix it.
+
+        **If this is a security issue, do not file a public bug report.** See [SECURITY.md](../blob/main/.github/SECURITY.md) for the private disclosure path.
+
+  - type: input
+    id: version
+    attributes:
+      label: Libro version + commit SHA
+      description: Output of `git -C <install-target> log -1 --format=%H` (or release tag if you installed from a release tarball).
+      placeholder: "e.g. v0.2.0-alpha (d02ef18c)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: profile
+    attributes:
+      label: Profile
+      description: Which profile did you install?
+      options:
+        - libro-core
+        - libro-creator
+        - libro-govcon
+        - libro-ops
+        - libro-full
+        - other / multiple (describe below)
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS + shell
+      description: Output of `uname -a` and `$SHELL --version`
+      placeholder: "Darwin 25.5.0 / zsh 5.9"
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: Exact commands you ran, in order, that produced the bug.
+      placeholder: |
+        bash install.sh --profile libro-core --target /tmp/x --yes
+        /tmp/x/.claude/skills/cerebro-doctor/Scripts/doctor.py
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: What happened? Include error messages, stack traces, log lines.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: Workarounds you tried, related issues, screenshots, anything else useful.
+    validations:
+      required: false
