@@ -22,8 +22,7 @@ All notable changes to Libro are documented here. Format loosely follows [Keep a
 - Internal module-status registry (`MODULE_REGISTRY.md`) — Phase B will republish a customer-facing registry stripped of internal dev-log vocabulary.
 
 ### Pending (0.2.x)
-- Skill packs land per-batch in subsequent commits. Each batch passes the externalization audit (no operator identifiers, no fleet topology, no workspace-absolute paths) and a pre-commit hook enforces it. A customer-facing skill-status registry lands alongside the first stable release.
-- Pre-commit hook itself lands as a follow-on commit ahead of the first skill batch.
+- Skill packs land per-batch in subsequent commits. Each batch passes maintainer-side externalization lint (no operator identifiers, no fleet topology, no workspace-absolute paths). A public pre-commit hook and customer-facing skill-status registry land in later 0.2.x commits.
 - Customer-experience audit (clone → install → use on a fresh box) gates the first stable release (`0.2.0`).
 
 ---
