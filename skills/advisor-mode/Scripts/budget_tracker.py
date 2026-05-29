@@ -22,9 +22,9 @@ from pathlib import Path
 from collections import defaultdict
 
 # Auto-detect from script location; override with CEREBRO_BRAIN_ROOT env var if needed.
-# Script lives at: <BRAIN_ROOT>/skills/advisor-dispatch/Scripts/budget_tracker.py → parents[3] = <BRAIN_ROOT>
+# Script lives at: <BRAIN_ROOT>/skills/advisor-mode/Scripts/budget_tracker.py → parents[3] = <BRAIN_ROOT>
 BRAIN_ROOT = Path(os.environ.get("CEREBRO_BRAIN_ROOT") or str(Path(__file__).resolve().parents[3]))
-LOG_FILE   = BRAIN_ROOT / "skills" / "advisor-dispatch" / "logs" / "daily_usage.md"
+LOG_FILE   = BRAIN_ROOT / "skills" / "advisor-mode" / "logs" / "daily_usage.md"
 DAILY_BUDGET = 20
 
 
