@@ -111,6 +111,8 @@ files out, the guard catches secrets pasted *inside* otherwise-fine files.
 
 Re-running with a different profile is additive — your scaffold stays put, additional skills land alongside.
 
+See [`SKILL_STATUS.md`](SKILL_STATUS.md) for which shipped skills are stable vs preview.
+
 | Profile | Ships in 0.2.0-alpha | Who it's for |
 |---|---|---|
 | 🟢 **`libro-core`** | 7 core skills + 9 brain scaffolds | First-timers. Smallest footprint. **Start here.** |
