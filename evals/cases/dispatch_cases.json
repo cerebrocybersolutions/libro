@@ -1,0 +1,26 @@
+[
+  { "task": "Convert this vendor list into a markdown table", "expected": "C", "note": "fast-track: convert to" },
+  { "task": "What is the NAICS code for software publishers?", "expected": "C", "note": "fast-track: what is / look up" },
+  { "task": "Spell check this paragraph", "expected": "C", "note": "fast-track: spell check" },
+  { "task": "Summarize this paragraph in two lines", "expected": "C", "note": "fast-track: summarize this paragraph" },
+  { "task": "Look up the CMMC Level 2 practice count", "expected": "C", "note": "fast-track: look up" },
+
+  { "task": "Write a proposal for a SAM micro-purchase", "expected": "B", "note": "fast-track: write a proposal" },
+  { "task": "Analyze this RFQ for hidden evaluation criteria", "expected": "B", "note": "fast-track: analyze this" },
+  { "task": "Draft an email about the schedule slip to the contracting officer", "expected": "B", "note": "fast-track: draft an email about" },
+  { "task": "Create a plan for onboarding a new pilot customer", "expected": "B", "note": "fast-track: create a plan for" },
+  { "task": "Review this vendor quote and flag pricing risks", "expected": "B", "note": "no keyword; single-dept analysis" },
+
+  { "task": "Should we pursue SAMPLE-2026-00001?", "expected": "A", "note": "fast-track: should we pursue" },
+  { "task": "Architect the cross-department sync skill", "expected": "A", "note": "fast-track: architect" },
+  { "task": "Strategy for entering the CMMC assessment market", "expected": "A", "note": "fast-track: strategy for" },
+  { "task": "This change affects multiple departments, how should we sequence it?", "expected": "A", "note": "fast-track: affects multiple departments" },
+  { "task": "Decide whether to publish the white paper, since publication is irreversible", "expected": "A", "note": "fast-track: irreversible" },
+
+  { "task": "Full architecture review of the AI infrastructure stack", "expected": "A+", "note": "fast-track: full architecture review" },
+  { "task": "Should we pivot the company from GovCon to commercial AI?", "expected": "A+", "note": "fast-track: should we pivot" },
+  { "task": "Review all departments and propose a reorganization", "expected": "A+", "note": "fast-track: review all departments" },
+
+  { "task": "Rotate all production credentials after a suspected key leak", "expected": "A", "note": "judgment case: high stakes + hard to reverse, no fast-track keyword" },
+  { "task": "Pick a placeholder color for the logo mockup", "expected": "C", "note": "judgment case: trivial + reversible, no fast-track keyword" }
+]
