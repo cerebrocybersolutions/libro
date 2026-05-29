@@ -82,7 +82,7 @@ DEFAULT_MAX_USES = 3
 DAILY_ADVISOR_BUDGET = 20
 
 # ── Topology vocabulary (borrowed from ruflo scan, 2026-04-17) ──────────────
-# Shared naming across advisor-dispatch, council-mode, orchestrator-mode so the
+# Shared naming across advisor-mode, council-mode, orchestrator-mode so the
 # agent-graph shape is legible in logs and output without reading the skill code.
 # Values: direct | fan-out-1 | parallel-N | chain-N | dialectic-N
 # Source: knowledge-vault/raw/swarm-orchestration-patterns-from-the-frontier.md
@@ -109,7 +109,7 @@ def _resolve_brain_root() -> Path:
     return p
 
 BRAIN_ROOT = _resolve_brain_root()
-LOG_DIR    = BRAIN_ROOT / "skills" / "advisor-dispatch" / "logs"
+LOG_DIR    = BRAIN_ROOT / "skills" / "advisor-mode" / "logs"
 LOG_FILE   = LOG_DIR / "daily_usage.md"
 
 # --- fleet-dispatch config load (lazy) --------------------------------------
@@ -243,7 +243,7 @@ SYSTEM_PROMPTS = {
         "Brain: {{brain_root}}/"
     ),
     "A": (
-        "You are the execution layer for the operator's advisor-dispatch system. "
+        "You are the execution layer for the operator's advisor-mode system. "
         "An Opus advisor will provide you with a strategic plan. Execute that plan precisely. "
         "Rules: (1) Do not begin until you have the advisor's plan. "
         "(2) Follow plan steps in order. "

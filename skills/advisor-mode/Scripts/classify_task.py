@@ -21,7 +21,7 @@ import os
 import sys
 
 CLASSIFIER_SYSTEM_PROMPT = """
-You are a task classifier for the operator's advisor-dispatch system.
+You are a task classifier for the operator's advisor-mode system.
 
 Your job: classify the given task into the correct tier using the scoring matrix below.
 Output ONLY the structured classification block. No preamble. No commentary outside the block.
@@ -126,7 +126,7 @@ def classify(task: str, verbose: bool = False) -> str:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Classify a task into the correct advisor-dispatch tier"
+        description="Classify a task into the correct advisor-mode tier"
     )
     parser.add_argument("--task",    required=True, help="Task description to classify")
     parser.add_argument("--verbose", action="store_true",
