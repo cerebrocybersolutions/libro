@@ -1,0 +1,20 @@
+{
+  "_note": "Operator-facing maturity overlay for shipped Libro skills. Profile membership is NOT stored here — it is derived from manifests/ at generation time (single source of truth). This file only adds the status + summary that manifests lack. Regenerate SKILL_STATUS.md via scripts/skill-status.sh after editing.",
+  "_status_legend": {
+    "stable": "Dogfooded by Cerebro in daily flow. Safe to rely on.",
+    "preview": "Shipped + functional, but not yet dogfooded daily. Behavior may change. Ship-what-we-use posture — returning to stable as daily-flow integration lands.",
+    "experimental": "Early. May break or be removed. Try it, do not depend on it."
+  },
+  "skills": {
+    "brain-setup": { "status": "stable", "summary": "Scaffolds the Brain folder hierarchy (sessions / decisions / dashboard / awareness)." },
+    "sessionstart": { "status": "stable", "summary": "Opens a session with a grounded department brief (single-shot orientation)." },
+    "sessionend": { "status": "stable", "summary": "Closes a session with a structured retro, dashboard update, and memory-size probe." },
+    "ceo-brief": { "status": "stable", "summary": "Cross-department rollup synthesizing the latest session state per department." },
+    "cerebro-doctor": { "status": "stable", "summary": "Health probe for the installed bundle — skills, scaffold integrity, dependencies." },
+    "memory-attribution-lint": { "status": "stable", "summary": "Enforces the 11-key provenance frontmatter contract on memory files." },
+    "skill-manage": { "status": "stable", "summary": "6-action CLI over your skill library (create / edit / patch / delete / write-file / remove-file)." },
+    "advisor-mode": { "status": "preview", "summary": "Tiered model routing — classifies a request and routes to the right model tier. Deferred from V1; Cerebro does not dogfood it daily yet." },
+    "council-mode": { "status": "preview", "summary": "Adversarial parallel comparison — several voices answer, then synthesize. Deferred from V1." },
+    "orchestrator-mode": { "status": "preview", "summary": "Sequential chain routing across stages. Deferred from V1." }
+  }
+}
