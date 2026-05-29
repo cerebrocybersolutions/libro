@@ -70,6 +70,43 @@ The template documents every key. Dispatch scripts and selected skill prompts re
 
 ---
 
+## Protecting your brain repo
+
+Your brain accumulates real notes, decisions, and context. If you put it under git
+(recommended), install the pre-commit guard so your own secrets and PII never land in
+history:
+
+```bash
+# from the root of your brain repo
+bash scripts/install-git-hooks.sh
+```
+
+This installs a `pre-commit` hook that scans staged changes on every commit and **blocks**
+the commit if it finds:
+
+- credentials — API keys (Anthropic / OpenAI / AWS / GitHub / Google / Slack), private-key
+  blocks, or generic `SECRET=…` / `TOKEN=…` / `PASSWORD=…` assignments
+- credential files — `.env`, `*.pem`, `*.key`, `id_rsa`, `.netrc`, `*credentials*`
+
+It also **warns** (without blocking) on absolute home paths, email addresses, and
+private-network IPs.
+
+Example/template files (`*.example`, `*.template`, `*.sample`) and obvious placeholders
+(`{{...}}`, `YOUR_KEY`, `CHANGEME`) are ignored. Matched secrets are masked in output.
+
+Run it manually any time:
+
+```bash
+bash scripts/pre-commit-lint.sh          # scan staged changes
+bash scripts/pre-commit-lint.sh --all    # scan the whole tree
+```
+
+Bypass a single commit when you're sure: `LIBRO_SKIP_LINT=1 git commit ...` (or
+`git commit --no-verify`). The guard complements `.gitignore` — `.gitignore` keeps named
+files out, the guard catches secrets pasted *inside* otherwise-fine files.
+
+---
+
 ## Pick your profile
 
 Re-running with a different profile is additive — your scaffold stays put, additional skills land alongside.
