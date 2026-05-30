@@ -10,6 +10,7 @@
   <a href="https://claude.ai"><img src="https://img.shields.io/badge/Built_for-Claude-D77757?style=for-the-badge" alt="Built for Claude"></a>
   <a href="https://github.com/cerebrocybersolutions/libro/issues"><img src="https://img.shields.io/badge/Feedback-GitHub_Issues-181717?style=for-the-badge&logo=github" alt="Feedback"></a>
   <a href="#install-in-30-seconds"><img src="https://img.shields.io/badge/Install-30_seconds-3fb950?style=for-the-badge" alt="Install"></a>
+  <a href="https://cerebrocybersolutions.com/libro"><img src="https://img.shields.io/badge/Home_%26_Newsletter-cerebrocybersolutions.com-D77757?style=for-the-badge" alt="Libro Home & Newsletter"></a>
 </p>
 
 **Libro is a Brain, a skill library, and a tight set of operating conventions you drop into your Claude workspace — and from that day forward, every session opens exactly where the last one closed.** It's not a model. Not an agent host. Not a SaaS. It's the operating layer a small operator pours their work into so the work stops evaporating between conversations.
@@ -202,6 +203,8 @@ Anthropic Claude is a separate product; Anthropic's [Usage Policy](https://www.a
 ## Feedback
 
 This is a preview release. File feedback via [GitHub Issues](https://github.com/cerebrocybersolutions/libro/issues). Bug reports welcome. Feature requests welcome — no commitment on roadmap inclusion.
+
+**Built by [Cerebro Cyber Solutions](https://cerebrocybersolutions.com/libro).** Updates, new skill packs as they clear the externalization audit, and the story behind Libro → **[cerebrocybersolutions.com/libro](https://cerebrocybersolutions.com/libro)** (newsletter signup on the page).
 
 ---
 
