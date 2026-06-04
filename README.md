@@ -169,6 +169,14 @@ Maintainer-side externalization lint gates every skill batch before release. A p
 
 ---
 
+## Used by
+
+Libro's **customer zero is [Cerebro Cyber Solutions](https://cerebrocybersolutions.com/libro)** — the operator that built it. Cerebro runs Libro as its own daily operating layer across a multi-department single-operator business. Every skill in this repo ships only *after* it has earned its place in Cerebro's own real workflow and cleared the externalization audit. Nothing here is theoretical; it's the framework one operator actually runs.
+
+Running Libro and want to be listed here? Open a PR adding yourself to this section — a name, an optional link, and one line on what you use it for. Alpha and proud of it.
+
+---
+
 ## Layout
 
 ```
