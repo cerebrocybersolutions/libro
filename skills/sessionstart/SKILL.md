@@ -186,6 +186,7 @@ Render the same synthesized brief to HTML in the operator's house theme. Markdow
 
 - **Theme:** read `{house_theme_path}` first; drop the `:root` token block into `<style>` verbatim; use `var(--*)` references throughout (no inline hex literals). Default: `{brain_root}/mission-control/audits/theme.md` if no operator override.
 - **Output:** `{brain_root}/mission-control/state/briefs/{YYYY-MM-DD}-{dept}-sessionstart.html` (append `-{HHMM}` if multiple on the same date).
+- **Write mechanism — prefer a shell heredoc / file `write_text` over the harness Write tool.** Some agent harnesses (e.g. Claude Code's Launch preview) auto-surface Write-tool output in an in-app preview panel. If you intend the browser/file to be the deliverable and do NOT want a duplicate preview-panel copy, author the HTML and write it via `cat > <path> <<'HTMLEOF' … HTMLEOF` (or python `write_text`) — the panel surfacing is keyed to the Write *tool*, not to the file on disk. Harness-agnostic; harmless on harnesses without a preview panel.
 - **Same content, different render.** Reproducibility #8 — render-target separation. Synthesis from Stages 1–6 is target-agnostic; markdown and HTML BOTH render from that state. Drift between them is a render-layer bug.
 - **Chat delivery:** append a one-line link after the markdown brief.
 - **Conditional sections** obey the same hide-when-empty rules as the markdown brief.
