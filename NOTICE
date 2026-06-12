@@ -13,6 +13,11 @@ retain their original upstream licenses (MIT / Apache-2.0 / other
 permissive). See individual skill folders for upstream attribution
 where applicable.
 
+Portions of the council-mode and advisor-mode skill packages are
+derived from TradingAgents (https://github.com/TauricResearch/TradingAgents),
+Copyright Tauric Research, licensed under the Apache License 2.0.
+See in-file headers for per-file source attribution.
+
 "Libro" and "Cerebro Cyber Solutions" are trademarks of
 Cerebro Cyber Solutions LLC. Use of these names in derivative
 works requires written permission per Section 6 of the Apache
