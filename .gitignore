@@ -33,5 +33,10 @@ profile.yaml
 .libro-manifest.json
 *.log
 
+# Agent-runtime local state (never ship — contains absolute host paths)
+.claude-flow/
+.swarm/
+.hive-mind/
+
 # Lint logs (run locally, not committed)
 *-lint.log
