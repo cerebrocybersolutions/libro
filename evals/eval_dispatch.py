@@ -2,6 +2,13 @@
 """
 eval_dispatch.py — Evaluation harness for the advisor-mode task classifier.
 
+LIFECYCLE NOTE (2026-07-26): advisor-mode is RETIRED upstream and ships marked LEGACY.
+This harness therefore evaluates a retired classifier. Its --mock mode is offline,
+deterministic and safe to run. Its DEFAULT (live) mode calls the Anthropic API and will
+bill your key. Prefer --mock. If you want the routing idea rather than this dispatcher,
+take the tier heuristic documented in skills/advisor-mode/SKILL.md and wire it into
+whatever harness you already run.
+
 The advisor-mode skill routes each task to a model tier (C/B/A/A+) based on
 complexity, reversibility, cross-department impact, and stakes. Routing quality
 matters: under-classifying a high-stakes task sends it to a weak/cheap model,

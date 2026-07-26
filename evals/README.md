@@ -1,5 +1,11 @@
 # Evals
 
+> **LEGACY — 2026-07-26.** advisor-mode is retired upstream and ships marked LEGACY;
+> this harness evaluates a retired classifier and is kept for reference. `--mock` is
+> offline and safe. **The default (live) mode calls the Anthropic API and bills your
+> key.** Prefer `--mock`. The durable part is the tier heuristic in the skill's banner,
+> not this dispatcher.
+
 Evaluation harness for Libro's routing logic. Start with the advisor-mode task
 classifier, which decides what model tier a task should run on.
 
