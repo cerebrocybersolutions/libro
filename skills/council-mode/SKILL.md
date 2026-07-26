@@ -1,6 +1,7 @@
 ---
 name: council-mode
 description: >
+  [LEGACY 2026-07-26 — retired upstream, shipped for reference only. Do NOT invoke against a live API key: the cloud path bills a real request against a beta unexercised since April 2026, on superseded model pins. The durable tier heuristic is preserved in the banner below.]
   Adversarial parallel comparison — runs the SAME task across multiple model tiers
   and/or providers in parallel, then surfaces where each model disagrees, fails, or
   hallucinates. Purpose is NOT consensus: the purpose is exposing failure modes so the
@@ -25,6 +26,35 @@ metadata:
       - fleet_backup      # optional fallback node
     requires: [advisor-mode]
 ---
+> ## ⚠️ LEGACY — 2026-07-26 · NOT RECOMMENDED FOR NEW WORK
+>
+> **This skill is retired upstream and is shipped for reference and reversibility, not for use.**
+>
+> **Do not invoke it against a live API key.** Its cloud path issues a real, billable
+> `client.beta.messages.create` request using the `advisor_20260301` tool with
+> `betas=["advisor-tool-2026-03-01"]`, and hardcodes `"model": "claude-opus-4-7"`. That beta has
+> not been exercised since April 2026, so whether it still exists server-side is **unknown**, and
+> the model pins throughout this skill (`claude-opus-4-7`, `claude-sonnet-4-6`, `claude-haiku-4-5`)
+> are superseded. An invocation may bill your account for a request that cannot succeed.
+>
+> **Why it is here at all.** The tier *heuristic* below is the durable part and is model-agnostic:
+>
+> 1. Can a smart intern do this in one step? → **C**
+> 2. Does it need synthesis, structure, or multiple steps? → **B**
+> 3. Does it involve strategy, irreversibility, or cross-cutting impact? → **A**
+> 4. Would getting it wrong cost $10K+ or set a wrong direction for months? → **A+**
+>
+> Plus two disciplines worth keeping regardless of which models you run: **plan before act** — the
+> stronger model advises on the *plan*, the executor carries it out — and treat an advisor budget
+> as a **hard ceiling**, not a suggestion.
+>
+> **What replaced it upstream.** Modern agent harnesses route internally, so an explicit
+> classify-then-dispatch layer has no caller left. The advisor role became a dedicated reviewer
+> subagent; gate-and-escalate became a standing review norm. If you want the capability, wire the
+> heuristic into whatever harness you already run rather than reviving this dispatcher.
+>
+> Retired 2026-07-26. Scripts are preserved unmodified so nothing you may have built on them breaks.
+
 
 # Council Mode
 ### Adversarial Parallel Comparison | Failure-Mode Surfacing | Not Consensus
