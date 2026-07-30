@@ -1152,4 +1152,13 @@ def main():
 
 
 if __name__ == "__main__":
+    # LEGACY fail-close (Cerebro 2026-07-30): council-mode is RETIRED and this entrypoint fans a
+    # task across MULTIPLE cloud models — the most billable of the three. Refuse unless the operator
+    # explicitly opts in, so a default `python council_run.py` cannot silently bill a key.
+    if os.environ.get("LIBRO_LEGACY_OPTIN") != "1":
+        sys.stderr.write(
+            "REFUSED: council-mode is RETIRED (LEGACY) and this entrypoint makes billable multi-model "
+            "API calls. See skills/council-mode/SKILL.md (LEGACY banner). To run anyway, set "
+            "LIBRO_LEGACY_OPTIN=1.\n")
+        sys.exit(2)
     main()

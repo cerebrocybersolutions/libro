@@ -785,4 +785,13 @@ def main():
 
 
 if __name__ == "__main__":
+    # LEGACY fail-close (Cerebro 2026-07-30): orchestrator-mode is RETIRED and this entrypoint makes
+    # billable Anthropic API calls. Refuse unless the operator explicitly opts in, so a default
+    # `python orchestrator_run.py` cannot silently bill a key. Refuse in code, not just in the doc.
+    if os.environ.get("LIBRO_LEGACY_OPTIN") != "1":
+        sys.stderr.write(
+            "REFUSED: orchestrator-mode is RETIRED (LEGACY) and this entrypoint makes billable "
+            "Anthropic API calls. See skills/orchestrator-mode/SKILL.md (LEGACY banner). To run "
+            "anyway, set LIBRO_LEGACY_OPTIN=1.\n")
+        sys.exit(2)
     main()

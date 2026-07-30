@@ -4,8 +4,9 @@ eval_dispatch.py — Evaluation harness for the advisor-mode task classifier.
 
 LIFECYCLE NOTE (2026-07-26): advisor-mode is RETIRED upstream and ships marked LEGACY.
 This harness therefore evaluates a retired classifier. Its --mock mode is offline,
-deterministic and safe to run. Its DEFAULT (live) mode calls the Anthropic API and will
-bill your key. Prefer --mock. If you want the routing idea rather than this dispatcher,
+deterministic and safe to run, and is now the DEFAULT. Live mode requires an explicit --live AND
+LIBRO_LEGACY_OPTIN=1 (it calls the Anthropic API and will bill your key). If you want the routing
+idea rather than this dispatcher,
 take the tier heuristic documented in skills/advisor-mode/SKILL.md and wire it into
 whatever harness you already run.
 
@@ -16,10 +17,10 @@ which is the costly failure mode. This harness measures routing quality against
 a labeled set of cases.
 
 Two modes:
-  --mock   Offline. Uses the documented fast-track keyword rules as a local
+  (default) Mock. Offline. Uses the documented fast-track keyword rules as a local
            classifier. Deterministic, no API key, runnable in CI.
-  (default) Live. Calls skills/advisor-mode/Scripts/classify_task.classify()
-           (Claude Haiku). Requires ANTHROPIC_API_KEY.
+  --live   Live. Calls skills/advisor-mode/Scripts/classify_task.classify()
+           (Claude Haiku). Requires ANTHROPIC_API_KEY and LIBRO_LEGACY_OPTIN=1 (billable).
 
 Metrics:
   - exact accuracy        predicted tier == expected tier
@@ -31,9 +32,9 @@ Metrics:
   - per-tier + confusion matrix
 
 Usage:
-  python evals/eval_dispatch.py --mock
-  python evals/eval_dispatch.py --mock --json
-  python evals/eval_dispatch.py                      # live (needs ANTHROPIC_API_KEY)
+  python evals/eval_dispatch.py                      # mock (default, offline, safe)
+  python evals/eval_dispatch.py --json
+  LIBRO_LEGACY_OPTIN=1 python evals/eval_dispatch.py --live   # billable, needs ANTHROPIC_API_KEY
   python evals/eval_dispatch.py --cases path/to/cases.json --verbose
 """
 
@@ -41,6 +42,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -246,7 +248,10 @@ def main() -> int:
     parser.add_argument("--cases", type=Path, default=DEFAULT_CASES,
                         help="JSON file of labeled cases (default: evals/cases/dispatch_cases.json)")
     parser.add_argument("--mock", action="store_true",
-                        help="Offline mode: keyword classifier, no API key needed")
+                        help="Offline mode: keyword classifier, no API key needed (this is the DEFAULT)")
+    parser.add_argument("--live", action="store_true",
+                        help="Billable live mode: calls the Anthropic API. Requires ANTHROPIC_API_KEY "
+                             "and LIBRO_LEGACY_OPTIN=1 (advisor-mode is RETIRED).")
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
     parser.add_argument("--verbose", action="store_true", help="Per-case output")
     parser.add_argument("--min-adjacent", type=float, default=None,
@@ -256,7 +261,16 @@ def main() -> int:
     args = parser.parse_args()
 
     cases = load_cases(args.cases)
-    classify_fn = mock_classify if args.mock else live_classify
+    # LEGACY fail-close (Cerebro 2026-07-30): default to the offline mock so a bare run cannot silently
+    # bill a key. Live requires BOTH an explicit --live and LIBRO_LEGACY_OPTIN=1, since advisor-mode is
+    # RETIRED. --mock wins if both are passed.
+    use_live = args.live and not args.mock
+    if use_live and os.environ.get("LIBRO_LEGACY_OPTIN") != "1":
+        sys.stderr.write(
+            "REFUSED: --live is billable and advisor-mode is RETIRED (LEGACY). "
+            "Set LIBRO_LEGACY_OPTIN=1 to run it, or use the default (mock) mode.\n")
+        return 2
+    classify_fn = live_classify if use_live else mock_classify
     report = run_eval(cases, classify_fn, verbose=args.verbose)
 
     if args.json:
