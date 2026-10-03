@@ -2,7 +2,7 @@
   "$schema": "../profile.schema.json",
   "spec_version": "1.0.0",
   "name": "libro-creator",
-  "version": "0.2.0-alpha",
+  "version": "0.3.0-alpha",
   "parent_profile": "libro-core",
   "audience": "Solopreneur content creators and marketing operators. Needs a content pipeline — editorial calendar, scroll-stop hooks, email cadence, and LinkedIn / YouTube publishing workflows.",
   "additive_modules": {

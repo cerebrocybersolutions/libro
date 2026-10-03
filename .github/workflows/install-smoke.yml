@@ -10,6 +10,7 @@ on:
       - 'skills/**'
       - 'lib/**'
       - 'scaffold/**'
+      - 'tests/**'
       - '.github/workflows/install-smoke.yml'
   pull_request:
     branches: [main]
@@ -20,6 +21,7 @@ on:
       - 'skills/**'
       - 'lib/**'
       - 'scaffold/**'
+      - 'tests/**'
       - '.github/workflows/install-smoke.yml'
   workflow_dispatch:
 
@@ -33,6 +35,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         profile:
           - libro-core
+          - libro-starter
           - libro-creator
           - libro-govcon
           - libro-ops
@@ -91,7 +94,7 @@ jobs:
 
       - name: Run cerebro-doctor
         run: |
-          python3 "$RUNNER_TEMP/libro-${{ matrix.profile }}/.claude/skills/cerebro-doctor/Scripts/doctor.py"
+          python3 "$RUNNER_TEMP/libro-${{ matrix.profile }}/.claude/skills/cerebro-doctor/scripts/doctor.py"
 
       - name: Uninstall + residual probe
         run: |
@@ -104,3 +107,73 @@ jobs:
             fi
           fi
           echo "uninstall clean"
+
+  upgrade:
+    # Existing installs carry the pre-0.3.0 layout (Scripts/ in four skills). This job installs the
+    # v0.2.1-alpha release, upgrades it in place with this checkout, and requires the result to match
+    # a fresh install. macos-latest runs on a case-insensitive filesystem, where a case-only rename
+    # is easiest to get wrong; ubuntu-latest covers the case-sensitive side.
+    name: upgrade v0.2.1-alpha install on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: Checkout (with tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install the v0.2.1-alpha release (libro-full)
+        run: |
+          mkdir -p "$RUNNER_TEMP/v021"
+          git archive v0.2.1-alpha | tar -x -C "$RUNNER_TEMP/v021"
+          bash "$RUNNER_TEMP/v021/install.sh" --profile libro-full --target "$RUNNER_TEMP/brain" --yes
+          ls "$RUNNER_TEMP/brain/.claude/skills/cerebro-doctor" | grep -qx Scripts
+
+      - name: Upgrade in place with this checkout (profile read from the install record)
+        run: bash install.sh --target "$RUNNER_TEMP/brain" --yes
+
+      - name: Upgraded install is healthy and matches this checkout
+        run: |
+          python3 "$RUNNER_TEMP/brain/.claude/skills/cerebro-doctor/scripts/doctor.py"
+          bash install.sh --doctor --strict --target "$RUNNER_TEMP/brain"
+          for s in $(python3 lib/distribution.py resolve-chain --manifests-dir manifests --profile libro-full \
+                     | python3 -c "import json,sys; print(' '.join(json.load(sys.stdin)['skills']))"); do
+            if ! python3 lib/distribution.py tree-equal --verbose --src "skills/$s" --dst "$RUNNER_TEMP/brain/.claude/skills/$s"; then
+              echo "UPGRADE DRIFT in $s"; exit 1
+            fi
+          done
+          for s in cerebro-doctor memory-attribution-lint sessionend sessionstart; do
+            if ls "$RUNNER_TEMP/brain/.claude/skills/$s" | grep -qx Scripts; then
+              echo "STALE LAYOUT: $s/Scripts survived the upgrade"; exit 1
+            fi
+          done
+          echo "upgrade clean"
+
+  failure-paths:
+    # Negative acceptance: a failed or missing install record, an excluded path, a stale record or
+    # layout must never read as HEALTHY, and a dry run must write nothing (tests/install-failure-paths.sh).
+    name: failure paths on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run failure-path acceptance tests
+        run: bash tests/install-failure-paths.sh

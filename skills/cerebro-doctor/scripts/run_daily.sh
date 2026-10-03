@@ -13,14 +13,14 @@ set -euo pipefail
 
 # Resolve workspace root. In production launchd installs, CEREBRO_WORKSPACE_ROOT
 # is set in the plist EnvironmentVariables block. Fallback: walk up from
-# this script to find the workspace root (three levels above master-brain/skills/cerebro-doctor/Scripts).
+# this script to find the workspace root (three levels above master-brain/skills/cerebro-doctor/scripts).
 if [[ -z "${CEREBRO_WORKSPACE_ROOT:-}" ]]; then
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     CEREBRO_WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
 fi
 
 BRAIN_DIR="$CEREBRO_WORKSPACE_ROOT/master-brain"
-CHECK_SCRIPT="$BRAIN_DIR/skills/cerebro-doctor/Scripts/check_resolvable.py"
+CHECK_SCRIPT="$BRAIN_DIR/skills/cerebro-doctor/scripts/check_resolvable.py"
 AUDITS_DIR="$BRAIN_DIR/cerebro-doctor-reports"
 DATE_STAMP="$(date +%Y-%m-%d)"
 OUT_FILE="$AUDITS_DIR/$DATE_STAMP-cerebro-doctor.md"
@@ -41,8 +41,8 @@ date: $DATE_STAMP
 audit: cerebro-doctor
 exit_code: $EXIT_CODE
 principle_anchors: ["Parity #2", "Governance #1", "Reproducibility #8"]
-source_script: master-brain/skills/cerebro-doctor/Scripts/check_resolvable.py
-wrapper: master-brain/skills/cerebro-doctor/Scripts/run_daily.sh
+source_script: master-brain/skills/cerebro-doctor/scripts/check_resolvable.py
+wrapper: master-brain/skills/cerebro-doctor/scripts/run_daily.sh
 ---
 
 # cerebro-doctor daily audit — $DATE_STAMP

@@ -6,7 +6,7 @@
 
 <p align="left">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge" alt="License: Apache 2.0"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-0.2.0--alpha-orange?style=for-the-badge" alt="Version 0.2.0-alpha"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-0.3.0--alpha-orange?style=for-the-badge" alt="Version 0.3.0-alpha"></a>
   <a href="https://claude.ai"><img src="https://img.shields.io/badge/Built_for-Claude-D77757?style=for-the-badge" alt="Built for Claude"></a>
   <a href="https://github.com/cerebrocybersolutions/libro/issues"><img src="https://img.shields.io/badge/Feedback-GitHub_Issues-181717?style=for-the-badge&logo=github" alt="Feedback"></a>
   <a href="#install-in-30-seconds"><img src="https://img.shields.io/badge/Install-30_seconds-3fb950?style=for-the-badge" alt="Install"></a>
@@ -17,7 +17,7 @@
 
 If you've ever opened a fresh Claude session and spent 10 minutes re-explaining what you're working on, what was decided last week, and which thread you're picking up — **this is what fixes that.**
 
-> **🚧 Alpha (0.2.0).** Seven core skills + dispatch trinity (`libro-full` profile) ship today. Vertical skill packs land in 0.2.x as each one clears the externalization audit. Track progress in [`CHANGELOG.md`](CHANGELOG.md).
+> **🚧 Alpha (0.3.0).** Seven core skills ship in every profile, and `libro-starter` adds three day-one skills on top. Vertical skill packs land as each one clears the externalization audit. Track progress in [`CHANGELOG.md`](CHANGELOG.md). **Upgrading from 0.2.x?** Read [`UPGRADING.md`](UPGRADING.md): four skills moved their `Scripts/` folder to `scripts/`, and one `./install.sh --target <your brain>` run migrates you.
 
 ---
 
@@ -30,7 +30,8 @@ If you've ever opened a fresh Claude session and spent 10 minutes re-explaining 
 <tr><td><b>🩺 <code>cerebro-doctor</code> — health probe</b></td><td>Verifies skill presence, brain scaffold integrity, host-platform dependencies. Run it any time you suspect drift. Exits HEALTHY or tells you exactly what's broken.</td></tr>
 <tr><td><b>🔍 <code>memory-attribution-lint</code></b></td><td>Surfaces orphan and under-tagged memory files. Enforces an 11-key provenance frontmatter contract — every memory has a name, type, source, lifecycle, confidence. <b>Your memory stays auditable as it grows from 50 entries to 5,000.</b></td></tr>
 <tr><td><b>🎛️ <code>skill-manage</code></b></td><td>Generic CLI over any skill folder: <code>list</code> / <code>info</code> / <code>enable</code> / <code>disable</code> / <code>validate</code> / <code>audit</code>. Works on Libro skills, your skills, anybody's skills. <b>One CLI to rule them all.</b></td></tr>
-<tr><td><b>🎯 Dispatch trinity (<code>libro-full</code>)</b></td><td><b><code>advisor-mode</code></b> — tiered model routing (cheap → smart) based on task complexity.<br><b><code>council-mode</code></b> — adversarial parallel comparison; five voices argue, you pick the winner.<br><b><code>orchestrator-mode</code></b> — sequential chain plans for multi-stage work. Cleared for alpha evaluation in the <code>libro-full</code> profile.</td></tr>
+<tr><td><b>🌱 Starter skills (<code>libro-starter</code>)</b></td><td><b><code>daily-brief</code></b>: point it at one source and get a short ranked brief.<br><b><code>decision</code></b>: give it a yes/no question and the facts, get a verdict and the reason.<br><b><code>memory-recall</code></b>: ask what you did or decided last week; it reads your Brain and tells you. Free, plain SKILL.md files, no scripts. This profile replaces the separate Operator AI Starter Kit download.</td></tr>
+<tr><td><b>🗄️ Retired dispatch skills (<code>libro-full</code>)</b></td><td><code>advisor-mode</code>, <code>council-mode</code>, <code>orchestrator-mode</code>. Retired upstream and kept for reference so existing setups keep working. Their scripts refuse live, billable calls unless you set <code>LIBRO_LEGACY_OPTIN=1</code>. The tier heuristic in their SKILL.md files is the part worth keeping.</td></tr>
 <tr><td><b>📊 CEO brief</b></td><td>Cross-department rollup synthesizing latest session state per department. When you wear all the hats and need the one-screen view of the entire business — that screen.</td></tr>
 <tr><td><b>🛡️ No telemetry. No phone-home.</b></td><td>Libro never sends usage data anywhere. Your Brain stays on your disk. The maintainer learns nothing about how you use it unless you file an issue.</td></tr>
 </table>
@@ -51,13 +52,17 @@ Other modes:
 
 ```bash
 ./install.sh --profile libro-full --target ~/my-brain   # full alpha surface, custom target
-./install.sh --profile libro-core --dry-run             # plan only, no mutations
+./install.sh --profile libro-core --dry-run             # plan only: no files, no log written
 ./install.sh --rollback                                  # restore latest backup
+./install.sh --profile libro-starter                     # core + three day-one starter skills
+./install.sh --target ~/cerebro-brain                    # upgrade an existing install in place
 ```
 
-**The runner is presence-idempotent.** Re-running the same profile is safe and additive. Your edits to scaffold files are preserved silently. Every install against an existing target creates a timestamped backup (`.libro-backup-<ISO8601>/`) before mutating — fresh installs skip the backup (nothing to back up). `--rollback` restores from the latest snapshot.
+**The runner is idempotent and doubles as the upgrader.** Re-running a profile is safe and additive. Your edits to scaffold files are preserved silently. A skill folder that differs from the checkout you run is replaced as a whole, which is how upgrades land (see [`UPGRADING.md`](UPGRADING.md)). Every install against an existing target creates a timestamped backup (`.libro-backup-<ISO8601>/`) before mutating; fresh installs skip the backup because there is nothing to back up. `--rollback` restores from the latest snapshot.
 
-Install activity logs to `~/.cerebro-install.log`. **The runner never modifies files outside `--target`.**
+**What the runner writes outside `--target`:** on a real run, exactly two things: the activity log at `~/.cerebro-install.log` and the `.libro-backup-*` folder beside the target. `--dry-run` writes neither; it reads, prints the plan, and deletes the temp files it used. `--doctor` reads the target and appends to the log.
+
+**The exit status is the verdict.** `install.sh` exits 0 only when it wrote the install record (`.libro-manifest.json`) and the post-install health check is HEALTHY. A failed record write exits non-zero and says INSTALL INCOMPLETE; `cerebro-doctor` never reports HEALTHY for a target with a missing, unreadable, or empty record.
 
 ### Set up your operator profile (once)
 
@@ -114,15 +119,16 @@ Re-running with a different profile is additive — your scaffold stays put, add
 
 See [`SKILL_STATUS.md`](SKILL_STATUS.md) for which shipped skills are stable vs preview.
 
-| Profile | Ships in 0.2.0-alpha | Who it's for |
+| Profile | Ships in 0.3.0-alpha | Who it's for |
 |---|---|---|
 | 🟢 **`libro-core`** | 7 core skills + 9 brain scaffolds | First-timers. Smallest footprint. **Start here.** |
+| 🌱 **`libro-starter`** | Core + `daily-brief`, `decision`, `memory-recall` | Anyone running their own AI for the first time who wants three jobs that work on day one. |
 | 🏛️ **`libro-govcon`** | Core (vertical skills deferred) | Government-contracting shops with a real solicitation pipeline. |
 | 🎬 **`libro-creator`** | Core (vertical skills deferred) | Solo creators on YouTube / LinkedIn / brand content. |
 | ⚙️ **`libro-ops`** | Core (vertical skills deferred) | Multi-department operators running a small business across workstreams. |
-| 🚀 **`libro-full`** | Core + dispatch trinity (advisor / council / orchestrator) | Power users evaluating the full alpha surface. |
+| 🚀 **`libro-full`** | Core + the three retired dispatch skills (reference only) | Power users who want the full surface, including the retired skills' code to read. |
 
-Profile-specific skills (`govcon-workflow`, `content-pipeline`, `cross-dept-decisions`, `dept-activation`) are listed in each manifest's `_deferred_skills` and land in later 0.2.x commits after externalization review.
+Profile-specific skills (`govcon-workflow`, `content-pipeline`, `cross-dept-decisions`, `dept-activation`) are listed in each manifest's `_deferred_skills` and land in later releases after externalization review.
 
 ---
 
@@ -154,7 +160,7 @@ Libro is opinionated about what it is *not*. If any of these matter, you'll want
 - **Self-serve install.** The runner walks you through it, but the framework is meant to be *read and adopted*, not silently dropped in. The philosophy is half the product.
 - **Backend integrations.** No email / calendar / CRM connectors. No local-LLM routing. Libro is the operating layer — bring those separately if you want them.
 - **The paid product line.** BlackBox (Cerebro's paid, on-premises, white-glove deployment) is on a separate roadmap. Libro does not unlock or upsell it.
-- **Dispatch modes in every profile.** Ships in `libro-full` only — cleared for alpha evaluation. The four other profiles ship the seven-skill core only. Cerebro itself does not yet dogfood the trinity in daily flow; daily-flow integration lands in V1.1.
+- **Model-routing dispatch.** The three dispatch skills in `libro-full` are retired and refuse live calls unless you opt in. Modern agent harnesses route internally; wire the tier heuristic from their SKILL.md files into the harness you already run.
 
 ---
 
@@ -165,7 +171,7 @@ Libro is opinionated about what it is *not*. If any of these matter, you'll want
 3. **Local-fleet routing assumes you provide your own infrastructure.** Profiles referencing local models (Ollama, LiteLLM proxy) leave installation and configuration to you. The bundle does not install or manage them.
 4. **The framework is opinionated.** If your workflow conflicts with three-surface routing / Ops-as-product / infrastructure mode, the friction is intentional. Adapt the conventions, but understand the *why* first.
 
-Maintainer-side externalization lint gates every skill batch before release. A public pre-commit hook ships in a later 0.2.x commit.
+Maintainer-side externalization lint gates every skill batch before release. The contributor-side pre-commit guard ships in `scripts/` (see Protecting your brain repo).
 
 ---
 
@@ -183,6 +189,7 @@ Running Libro and want to be listed here? Open a PR adding yourself to this sect
 libro/
 ├── README.md                    # this file
 ├── CHANGELOG.md                 # version-by-version notes
+├── UPGRADING.md                 # what to run when moving between versions
 ├── LICENSE                      # Apache 2.0 license text
 ├── NOTICE                       # Attribution + trademark notice
 ├── install.sh                   # two-stage runner (plan + execute, idempotent, rollback-aware)
@@ -190,10 +197,10 @@ libro/
 ├── profile.yaml.template        # operator identity template (copy to ~/.cerebro/profile.yaml)
 ├── profile.schema.json          # JSON schema for manifest profiles
 ├── fleet-dispatch.template.json
-├── manifests/                   # per-profile manifests (libro-core / govcon / creator / ops / full)
+├── manifests/                   # per-profile manifests (libro-core / starter / govcon / creator / ops / full)
 ├── scaffold/                    # starter-template Brain scaffolds
 ├── lib/                         # installer / distribution helpers
-└── skills/                      # the actual skill folders (populated incrementally in 0.2.x)
+└── skills/                      # the actual skill folders; each one's scripts live in scripts/ (retired skills keep Scripts/)
 ```
 
 ---

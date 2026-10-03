@@ -95,7 +95,7 @@ EVERY session shape (not just ops-infra) — knowing whether each fleet node is 
 should be the first thing the brief surfaces.
 
 ```bash
-python3 master-brain/skills/sessionstart/Scripts/fleet_probe.py
+python3 master-brain/skills/sessionstart/scripts/fleet_probe.py
 ```
 
 Output (1-line summary):

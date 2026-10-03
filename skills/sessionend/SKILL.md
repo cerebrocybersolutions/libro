@@ -176,7 +176,7 @@ Update `MEMORY.md` index if anything changed. Only save what's genuinely new.
 Probe `MEMORY.md` against the 20 KB hard / 16 KB consolidation caps. Advisory only — never auto-edits.
 
 ```bash
-python3 {brain_root}/mission-control/skills/sessionend/Scripts/memory_size_probe.py
+python3 {brain_root}/mission-control/skills/sessionend/scripts/memory_size_probe.py
 ```
 
 **Behavior by exit code:**
@@ -214,7 +214,7 @@ Run this self-check:
 
    Detection: `git -C $(pwd) status --porcelain` slice against those paths. If any match, run:
    ```bash
-   python3 {brain_root}/mission-control/skills/sessionend/Scripts/parity_drift_check.py
+   python3 {brain_root}/mission-control/skills/sessionend/scripts/parity_drift_check.py
    ```
    Output is advisory — session close is NOT blocked. Surface the findings to operator.
 
@@ -253,7 +253,7 @@ Stamp writes:
 **Trigger:** Always run — read-only and fast.
 
 ```bash
-python3 {brain_root}/mission-control/skills/sessionend/Scripts/manifest_drift_check.py
+python3 {brain_root}/mission-control/skills/sessionend/scripts/manifest_drift_check.py
 ```
 
 Walks the workspace manifest and live filesystem to detect drift. Always exits 0 — never blocks close. If `REBUILD NEEDED`, print the notice to operator but continue.

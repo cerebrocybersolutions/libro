@@ -38,7 +38,7 @@ note_fail() { EXIT_STATUS="NEEDS-ATTENTION"; }
 # 0. Inject surface/host into session note frontmatter (idempotent)
 # Closes 2026-05-19 open loop "Sessionend auto-population of surface/host/session_id".
 # Runs BEFORE frontmatter VERIFY so injected fields count toward FM_HITS if needed.
-INJECT="${PROJECT_DIR}/master-brain/skills/sessionend/Scripts/inject_frontmatter.sh"
+INJECT="${PROJECT_DIR}/master-brain/skills/sessionend/scripts/inject_frontmatter.sh"
 if [[ -x "$INJECT" && -f "$SESSION_FILE" ]]; then
   INJECT_OUT=$("$INJECT" "$SESSION_FILE" 2>&1 || echo "[inject_frontmatter] error")
   # Extract last line (the result)
@@ -96,7 +96,7 @@ fi
 PARITY_TRIGGER=$(cd "$PROJECT_DIR" 2>/dev/null && git status --porcelain 2>/dev/null | \
   grep -cE "master-brain/(decisions|skills|hardware-inventory|labels|state/fleet-dispatch\.json)/|master-brain/(CLAUDE_CODE_SOP|NAMING_CONVENTION|CREDENTIAL_HANDLING_SOP|BRAIN_GOVERNANCE)\.md" || true)
 if (( PARITY_TRIGGER > 0 )); then
-  PARITY_OUT=$(python3 "${PROJECT_DIR}/master-brain/skills/sessionend/Scripts/parity_drift_check.py" 2>&1 || echo "ERROR")
+  PARITY_OUT=$(python3 "${PROJECT_DIR}/master-brain/skills/sessionend/scripts/parity_drift_check.py" 2>&1 || echo "ERROR")
   PARITY_FINDINGS=$(echo "$PARITY_OUT" | grep -cE "missing-active|bare-retired" || true)
   if (( PARITY_FINDINGS > 0 )); then
     echo "[DRIFT]  parity:      $PARITY_FINDINGS findings"
@@ -133,7 +133,7 @@ else
 fi
 
 # 6. Skill discoverability lint
-LINT="${PROJECT_DIR}/master-brain/skills/skill-discoverability-lint/Scripts/lint.py"
+LINT="${PROJECT_DIR}/master-brain/skills/skill-discoverability-lint/scripts/lint.py"
 if [[ -f "$LINT" ]]; then
   # Count actual [CRITICAL] finding lines, NOT the summary line which always contains "0 CRITICAL / ..."
   LINT_CRIT=$(python3 "$LINT" 2>/dev/null | grep -c "^  \[CRITICAL\]" || true)
@@ -147,7 +147,7 @@ else
 fi
 
 # 6b. Source-tag lint (memory frontmatter source-surface fields)
-STAG="${PROJECT_DIR}/master-brain/skills/source-tag-lint/Scripts/lint.py"
+STAG="${PROJECT_DIR}/master-brain/skills/source-tag-lint/scripts/lint.py"
 if [[ -f "$STAG" ]]; then
   STAG_OUT=$(python3 "$STAG" --summary 2>/dev/null || echo "")
   # Parse: "source-tag-lint: scanned=N CRITICAL=N WARN=N INFO=N"
@@ -167,7 +167,7 @@ else
 fi
 
 # 7. Cerebro auditor
-AUDITOR="${PROJECT_DIR}/master-brain/skills/cerebro-auditor/Scripts/audit.py"
+AUDITOR="${PROJECT_DIR}/master-brain/skills/cerebro-auditor/scripts/audit.py"
 if [[ -f "$AUDITOR" ]]; then
   AUD_OUT=$(CEREBRO_AUDITOR_PUSH=1 python3 "$AUDITOR" --critical-only 2>/dev/null || echo "")
   AUD_CRIT=$(echo "$AUD_OUT" | grep -c "CRITICAL" || true)
@@ -181,7 +181,7 @@ else
 fi
 
 # 8. Hermes config drift
-HCFG="${PROJECT_DIR}/master-brain/skills/sessionend/Scripts/hermes_config_drift.py"
+HCFG="${PROJECT_DIR}/master-brain/skills/sessionend/scripts/hermes_config_drift.py"
 if [[ -f "$HCFG" ]]; then
   HCFG_OUT=$( { gtimeout 8 python3 "$HCFG" 2>&1 || python3 "$HCFG" 2>&1; } || echo "TIMEOUT")
   if echo "$HCFG_OUT" | grep -q "not present — skip"; then
@@ -201,7 +201,7 @@ else
 fi
 
 # 9. Diagram drift-tag check
-DDC="${PROJECT_DIR}/master-brain/skills/sessionend/Scripts/diagram_drift_check.py"
+DDC="${PROJECT_DIR}/master-brain/skills/sessionend/scripts/diagram_drift_check.py"
 if [[ -x "$DDC" ]]; then
   python3 "$DDC" 2>/dev/null || echo "[DRIFT]  diagram-tags: SKIPPED (probe error)"
 else

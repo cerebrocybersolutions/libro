@@ -43,22 +43,22 @@ Required frontmatter keys:
 
 ## Scripts
 
-- `Scripts/lint.py` — validate + auto-inject; exit 0=pass, 1=blocked, 2=injected
-- `Scripts/backfill.py` — bulk backfill existing memory files
-- `Scripts/tests/fixtures/` — golden samples for validation cases
+- `scripts/lint.py`: validate + auto-inject; exit 0=pass, 1=blocked, 2=injected
+- `scripts/backfill.py`: bulk backfill existing memory files
+- `scripts/tests/fixtures/`: golden samples for validation cases
 
 ## Invocation
 
 ```bash
 # Validate single file
-python3 Scripts/lint.py path/to/memory.md
+python3 scripts/lint.py path/to/memory.md
 
 # Dry-run (report only)
-python3 Scripts/lint.py --dry-run path/to/memory.md
+python3 scripts/lint.py --dry-run path/to/memory.md
 
 # Backfill all memory dirs
-python3 Scripts/backfill.py --dry-run
-python3 Scripts/backfill.py --execute
+python3 scripts/backfill.py --dry-run
+python3 scripts/backfill.py --execute
 ```
 
 ## Hook wire (PreToolUse)

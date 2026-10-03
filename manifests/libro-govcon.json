@@ -2,7 +2,7 @@
   "$schema": "../profile.schema.json",
   "spec_version": "1.0.0",
   "name": "libro-govcon",
-  "version": "0.2.0-alpha",
+  "version": "0.3.0-alpha",
   "parent_profile": "libro-core",
   "audience": "Federal contractors and small-set-aside businesses pursuing GovCon opportunities. Needs SAM.gov tracking, RFQ pipeline management, and pitch tooling.",
   "additive_modules": {

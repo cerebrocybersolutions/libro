@@ -15,7 +15,7 @@ body:
     attributes:
       label: Libro version + commit SHA
       description: Output of `git -C <install-target> log -1 --format=%H` (or release tag if you installed from a release tarball).
-      placeholder: "e.g. v0.2.0-alpha (d02ef18c)"
+      placeholder: "e.g. v0.3.0-alpha (output of: git describe --tags)"
     validations:
       required: true
 
@@ -50,7 +50,7 @@ body:
       description: Exact commands you ran, in order, that produced the bug.
       placeholder: |
         bash install.sh --profile libro-core --target /tmp/x --yes
-        /tmp/x/.claude/skills/cerebro-doctor/Scripts/doctor.py
+        /tmp/x/.claude/skills/cerebro-doctor/scripts/doctor.py
       render: shell
     validations:
       required: true

@@ -9,13 +9,24 @@
 #   ./install.sh --profile libro-ops --target ~/my-brain   # custom install path
 #   ./install.sh --rollback                        # restore from latest backup
 #   ./install.sh --doctor                          # run cerebro-doctor only
+#   ./install.sh --target ~/cerebro-brain          # upgrade: re-run the profile recorded
+#                                                  # in the target's .libro-manifest.json
 #
 # Behavior:
 #   - Creates .libro-backup-<ISO8601>/ snapshot of existing Brain folder before
 #     mutating (Reversibility #5 — --rollback restores from latest)
 #   - Re-running a profile install is a no-op if Brain state matches manifest
-#   - Never modifies files outside --target (default: ~/cerebro-brain)
-#   - Logs every action to ~/.cerebro-install.log
+#   - Upgrade: an installed skill whose files differ from this checkout (names
+#     as stored on disk, bytes, exec bit) is replaced as a whole folder, so a
+#     case-only rename such as 0.3.0-alpha's Scripts/ to scripts/ lands on
+#     case-insensitive filesystems too. Scaffold files you edited are never
+#     overwritten. See UPGRADING.md.
+#   - Outside --target (default: ~/cerebro-brain) a real run writes exactly two
+#     things: the log at ~/.cerebro-install.log and the .libro-backup-* folder
+#     beside the target. --dry-run writes neither; it only reads, plus temp
+#     files it deletes before exiting.
+#   - Exits non-zero unless the install record (.libro-manifest.json) was
+#     written and the post-install health check is HEALTHY
 #
 # Principles: reversibility, least-privilege, observability.
 
@@ -58,7 +69,12 @@ _log() {
     local msg="$*"
     local ts
     ts="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-    echo "${ts} [${level}] ${msg}" | tee -a "${LOG_FILE}"
+    if [[ "${DRY_RUN:-0}" -eq 1 ]]; then
+        # A dry run writes nothing anywhere, the log file included.
+        echo "${ts} [${level}] ${msg}"
+    else
+        echo "${ts} [${level}] ${msg}" | tee -a "${LOG_FILE}"
+    fi
 }
 
 _info()  { _log INFO  "$@"; }
@@ -74,7 +90,9 @@ usage() {
 Usage: $(basename "$0") [OPTIONS]
 
 Options:
-  --profile <name>       Profile to install (libro-core | libro-govcon | libro-creator | libro-ops | libro-full)
+  --profile <name>       Profile to install (libro-core | libro-starter | libro-govcon | libro-creator | libro-ops | libro-full).
+                         Optional when upgrading: if omitted and the target already has a
+                         .libro-manifest.json, the profile recorded there is re-installed.
   --target <path>        Install path (default: ~/cerebro-brain)
   --dry-run              Plan only; do not write any files
   --rollback             Restore Brain from the most recent .libro-backup-* snapshot
@@ -85,6 +103,8 @@ Options:
 
 Examples:
   $(basename "$0") --profile libro-core
+  $(basename "$0") --profile libro-starter
+  $(basename "$0") --target ~/cerebro-brain        # upgrade an existing install in place
   $(basename "$0") --profile libro-govcon --dry-run
   $(basename "$0") --rollback
   $(basename "$0") --doctor
@@ -146,6 +166,21 @@ fi
 # ---------------------------------------------------------------------------
 # Validate inputs
 # ---------------------------------------------------------------------------
+
+# Upgrade convenience: with no --profile, re-install the profile the target
+# already records, so an upgrade cannot silently shrink to a smaller profile.
+if [[ $DOCTOR_ONLY -eq 0 && -z "${PROFILE}" && -f "${TARGET_DIR}/.libro-manifest.json" ]]; then
+    PROFILE="$(python3 -c "
+import json, sys
+try:
+    print(json.load(open(sys.argv[1])).get('profile', ''))
+except Exception:
+    print('')
+" "${TARGET_DIR}/.libro-manifest.json")"
+    if [[ -n "${PROFILE}" ]]; then
+        _info "No --profile given; upgrading the recorded profile: ${PROFILE}"
+    fi
+fi
 
 if [[ $DOCTOR_ONLY -eq 0 && -z "${PROFILE}" ]]; then
     _error "No --profile specified. Use --doctor for health-check only."
@@ -226,18 +261,36 @@ _install_skill() {
     fi
 
     if [[ -d "${dest_skill}" ]]; then
-        # Idempotency: skip if already installed and SKILL.md matches
-        local src_md="${source_skill}/SKILL.md"
-        local dst_md="${dest_skill}/SKILL.md"
-        if [[ -f "${src_md}" && -f "${dst_md}" ]]; then
-            if diff -q "${src_md}" "${dst_md}" >/dev/null 2>&1; then
-                # Still record as installed-on-disk so .libro-manifest.json
-                # reflects the FULL installed state, not just this run's delta.
-                INSTALLED_SKILLS+=("${skill_name}")
-                _info "  SKIP (already installed, up-to-date): ${skill_name}"
-                return 0
-            fi
+        # Idempotency: skip only if the whole installed folder matches this
+        # checkout. The comparison uses names as stored on disk, so a folder
+        # stored as Scripts/ never matches a source scripts/ folder, even on a
+        # case-insensitive filesystem where both names open the same folder.
+        if python3 "${LIB_DIR}/distribution.py" tree-equal \
+                --src "${source_skill}" --dst "${dest_skill}" >/dev/null 2>&1; then
+            # Still record as installed-on-disk so .libro-manifest.json
+            # reflects the FULL installed state, not just this run's delta.
+            INSTALLED_SKILLS+=("${skill_name}")
+            _info "  SKIP (already installed, up-to-date): ${skill_name}"
+            return 0
         fi
+
+        if [[ $DRY_RUN -eq 1 ]]; then
+            _info "  DRY-RUN: would update skill: ${skill_name}"
+            python3 "${LIB_DIR}/distribution.py" tree-equal --verbose \
+                --src "${source_skill}" --dst "${dest_skill}" 2>/dev/null \
+                | sed 's/^/      /' || true
+            return 0
+        fi
+
+        # Upgrade: replace the folder as a whole. Removing it first is what makes
+        # a case-only rename (0.3.0-alpha: Scripts/ to scripts/) take effect on
+        # case-insensitive filesystems; copying over the old folder would keep the
+        # old stored name. The previous copy is in the backup taken above.
+        rm -rf "${dest_skill}"
+        cp -R "${source_skill}" "${dest_skill}"
+        INSTALLED_SKILLS+=("${skill_name}")
+        _info "  UPDATED skill: ${skill_name} (previous copy kept in the backup)"
+        return 0
     fi
 
     if [[ $DRY_RUN -eq 1 ]]; then
@@ -246,7 +299,7 @@ _install_skill() {
     fi
 
     mkdir -p "$(dirname "${dest_skill}")"
-    cp -r "${source_skill}" "${dest_skill}"
+    cp -R "${source_skill}" "${dest_skill}"
     INSTALLED_SKILLS+=("${skill_name}")
     _info "  INSTALLED skill: ${skill_name}"
 }
@@ -352,6 +405,36 @@ do_doctor() {
         ok=0
     fi
 
+    # Stale folder layout: an installed skill that still holds a folder stored
+    # under an older name than this checkout ships (0.3.0-alpha: Scripts/ became
+    # scripts/ for four skills). Stored names are read with os.listdir, so this
+    # works on case-insensitive filesystems too.
+    if [[ -d "${TARGET_DIR}/.claude/skills" && -d "${SKILLS_SRC_DIR}" ]]; then
+        local stale
+        stale="$(python3 -c "
+import os, sys
+inst, src = sys.argv[1], sys.argv[2]
+for skill in sorted(os.listdir(inst)):
+    i, s = os.path.join(inst, skill), os.path.join(src, skill)
+    if not (os.path.isdir(i) and os.path.isdir(s)):
+        continue
+    have, want = set(os.listdir(i)), set(os.listdir(s))
+    for name in sorted(have - want):
+        if name.lower() in {w.lower() for w in want - have}:
+            print(f'{skill}/{name}')
+" "${TARGET_DIR}/.claude/skills" "${SKILLS_SRC_DIR}" 2>/dev/null || true)"
+        if [[ -z "${stale}" ]]; then
+            _info "  ✓ skill folder layout matches this checkout"
+        else
+            while IFS= read -r s; do
+                [[ -z "$s" ]] && continue
+                _warn "  ✗ stale folder name: ${s} (re-run ./install.sh to migrate; see UPGRADING.md)"
+                warn_count=$((warn_count + 1))
+            done <<< "${stale}"
+            ok=0
+        fi
+    fi
+
     # fleet-dispatch.template.json or fleet-dispatch.json (under master-brain/state/)
     if [[ -f "${TARGET_DIR}/master-brain/state/fleet-dispatch.json" ]] || \
        [[ -f "${TARGET_DIR}/master-brain/state/fleet-dispatch.template.json" ]]; then
@@ -361,47 +444,23 @@ do_doctor() {
         ok=0
     fi
 
-    # Manifest drift check: if .libro-manifest.json exists, verify every listed
-    # skill and scaffold is actually present on disk.
-    local manifest_path="${TARGET_DIR}/.libro-manifest.json"
-    if [[ -f "${manifest_path}" ]]; then
-        local drift=0
-        _info "  Manifest drift check: ${manifest_path}"
-        # Check installed_skills
-        while IFS= read -r skill_name; do
-            [[ -z "${skill_name}" ]] && continue
-            skill_dir="${TARGET_DIR}/.claude/skills/${skill_name}"
-            if [[ ! -d "${skill_dir}" ]]; then
-                _warn "  ✗ manifest drift: skill '${skill_name}' listed in manifest but missing from .claude/skills/"
-                drift=$((drift + 1))
-                warn_count=$((warn_count + 1))
-            fi
-        done < <(python3 -c "
-import json, sys
-d = json.load(open('${manifest_path}'))
-for s in d.get('installed_skills', []):
-    print(s)
-" 2>/dev/null || true)
-        # Check installed_scaffold
-        while IFS= read -r rel_path; do
-            [[ -z "${rel_path}" ]] && continue
-            if [[ ! -f "${TARGET_DIR}/${rel_path}" ]]; then
-                _warn "  ✗ manifest drift: scaffold '${rel_path}' listed in manifest but missing from target"
-                drift=$((drift + 1))
-                warn_count=$((warn_count + 1))
-            fi
-        done < <(python3 -c "
-import json, sys
-d = json.load(open('${manifest_path}'))
-for s in d.get('installed_scaffold', []):
-    print(s)
-" 2>/dev/null || true)
-        if [[ $drift -eq 0 ]]; then
-            _info "  ✓ manifest drift: 0 discrepancies"
-        else
-            _warn "  manifest drift: ${drift} discrepancy(s) found"
-            ok=0
-        fi
+    # Install record (.libro-manifest.json): the only proof of what was
+    # installed, and what the upgrade path reads. Missing, unreadable, empty,
+    # out of step with disk, or behind this checkout is never HEALTHY.
+    local record_out="" record_rc=0
+    _info "  Install record check: ${TARGET_DIR}/.libro-manifest.json"
+    # `|| record_rc=$?` keeps set -e from ending the run on the expected non-zero exit.
+    record_out="$(python3 "${LIB_DIR}/distribution.py" verify-record \
+        --target "${TARGET_DIR}" --manifests-dir "${MANIFESTS_DIR}" 2>&1)" || record_rc=$?
+    if [[ $record_rc -eq 0 ]]; then
+        _info "  ✓ install record present, readable, matches disk and this checkout's version"
+    else
+        while IFS= read -r line; do
+            [[ -z "${line}" ]] && continue
+            _warn "  ✗ ${line}"
+            warn_count=$((warn_count + 1))
+        done <<< "${record_out:-install record check failed to run}"
+        ok=0
     fi
 
     if [[ $ok -eq 1 ]]; then
@@ -432,7 +491,41 @@ _info "Profile:    ${PROFILE}"
 _info "Target:     ${TARGET_DIR}"
 _info "Source:     ${SOURCE_ROOT}"
 _info "Dry-run:    ${DRY_RUN}"
-_info "Log:        ${LOG_FILE}"
+if [[ $DRY_RUN -eq 1 ]]; then
+    _info "Log:        none (a dry run writes no log and no files)"
+else
+    _info "Log:        ${LOG_FILE}"
+fi
+
+# Upgrade awareness: read what the target already records so the new
+# .libro-manifest.json keeps tracking anything installed earlier (for example a
+# skill from a larger profile) that is still on disk. uninstall.sh removes only
+# what this file lists.
+PRIOR_SKILLS=()
+PRIOR_SCAFFOLD=()
+if [[ -f "${TARGET_DIR}/.libro-manifest.json" ]]; then
+    _prior_json="$(mktemp)"
+    if python3 -c "
+import json, sys
+d = json.load(open(sys.argv[1]))
+print('version', d.get('version', 'unknown'), d.get('profile', 'unknown'))
+for s in d.get('installed_skills', []):
+    print('skill', s)
+for s in d.get('installed_scaffold', []):
+    print('scaffold', s)
+" "${TARGET_DIR}/.libro-manifest.json" > "${_prior_json}" 2>/dev/null; then
+        while read -r kind value rest; do
+            case "${kind}" in
+                version)  _info "Upgrade:    target records ${rest} at profile version ${value}" ;;
+                skill)    PRIOR_SKILLS+=("${value}") ;;
+                scaffold) PRIOR_SCAFFOLD+=("${value}") ;;
+            esac
+        done < "${_prior_json}"
+    else
+        _warn "Existing .libro-manifest.json is unreadable; it will be rewritten."
+    fi
+    rm -f "${_prior_json}"
+fi
 
 # Resolve profile chain (parent-first). The function returns non-zero on a
 # broken/missing chain — we MUST check status BEFORE consuming stdout so the
@@ -456,6 +549,18 @@ if [[ ${#PROFILE_CHAIN[@]} -eq 0 ]]; then
     exit 1
 fi
 _info "Profile chain: ${PROFILE_CHAIN[*]}"
+
+# Exclusion gate, before anything is written: refuse a profile that would install
+# a path Libro must never ship (lib/distribution.py EXCLUDE_AT_INSTALL_TIME plus
+# each manifest's excluded_paths).
+EXCL_OUT=""
+EXCL_RC=0
+EXCL_OUT="$(python3 "${LIB_DIR}/distribution.py" check-exclusions \
+    --manifests-dir "${MANIFESTS_DIR}" --profile "${PROFILE}" 2>&1)" || EXCL_RC=$?
+if [[ $EXCL_RC -ne 0 ]]; then
+    _error "Refusing to install: ${EXCL_OUT}"
+    exit 1
+fi
 
 # Track whether the target existed before pre-flight mkdir, so the backup
 # block can skip empty-baseline backups on fresh first installs (Codex
@@ -549,6 +654,18 @@ print(json.dumps([dep['skill'] for dep in deps]))
     _info "--- Profile ${profile}: done ---"
 done
 
+# Carry forward earlier install records that are still on disk (see PRIOR_* above).
+for s in "${PRIOR_SKILLS[@]+"${PRIOR_SKILLS[@]}"}"; do
+    if [[ -d "${TARGET_DIR}/.claude/skills/${s}" ]]; then
+        INSTALLED_SKILLS+=("${s}")
+    fi
+done
+for s in "${PRIOR_SCAFFOLD[@]+"${PRIOR_SCAFFOLD[@]}"}"; do
+    if [[ -f "${TARGET_DIR}/${s}" ]]; then
+        INSTALLED_SCAFFOLD+=("${s}")
+    fi
+done
+
 # ---------------------------------------------------------------------------
 # Installed-manifest writeback (W1 closure — H22 port)
 # ---------------------------------------------------------------------------
@@ -559,14 +676,31 @@ done
 #   - re-runs can short-circuit when current state matches manifest
 #
 # Skipped on --dry-run because nothing was actually installed.
-# Non-fatal: if the writeback errors (e.g., target unwritable), we warn but
-# do not undo the install — the bytes are already on disk.
+# A failed writeback is FATAL to the run's result: the skill bytes stay on disk
+# (the backup can restore the prior state), but without a current record nothing
+# proves what was installed, so the run exits non-zero and the health check
+# below cannot report HEALTHY.
+
+INSTALL_INCOMPLETE=0
+_set_record_aside() {
+    # A record that no longer describes the target must not vouch for it. Move it
+    # aside (best effort; an unwritable target keeps it, and the version check in
+    # the health check still flags a stale one).
+    local rec="${TARGET_DIR}/.libro-manifest.json"
+    if [[ -f "${rec}" ]]; then
+        mv -f "${rec}" "${rec}.incomplete" 2>/dev/null \
+            && _warn "  Previous install record moved aside to .libro-manifest.json.incomplete"
+    fi
+    return 0
+}
 
 if [[ $DRY_RUN -eq 0 ]]; then
     _info "=== Writing installed manifest (.libro-manifest.json) ==="
     helper="${LIB_DIR}/distribution.py"
     if [[ ! -f "${helper}" ]]; then
-        _warn "Distribution helper missing: ${helper}. Skipping writeback."
+        _error "INSTALL INCOMPLETE: distribution helper missing (${helper}); no install record written."
+        INSTALL_INCOMPLETE=1
+        _set_record_aside
     else
         # Bash 3.2 (macOS default) needs the +"…" expansion for empty arrays
         # under `set -u`. Both lists may legitimately be empty on a fully
@@ -576,7 +710,9 @@ if [[ $DRY_RUN -eq 0 ]]; then
         # Build optional args list (bash 3.2 compatible — no declare -a with +=)
         bundle_sha_args=()
         [[ -n "${BUNDLE_SHA}" ]] && bundle_sha_args=("--bundle-sha" "${BUNDLE_SHA}")
-        if python3 "${helper}" writeback \
+        WB_ERR="$(mktemp)"
+        WB_RC=0
+        python3 "${helper}" writeback \
                 --target "${TARGET_DIR}" \
                 --manifests-dir "${MANIFESTS_DIR}" \
                 --profile "${PROFILE}" \
@@ -584,18 +720,43 @@ if [[ $DRY_RUN -eq 0 ]]; then
                 --installed-scaffold "${scaffold_str}" \
                 --source-root "${SOURCE_ROOT}" \
                 "${bundle_sha_args[@]+"${bundle_sha_args[@]}"}" \
-                > /dev/null; then
+                > /dev/null 2> "${WB_ERR}" || WB_RC=$?
+        while IFS= read -r line; do
+            [[ -z "${line}" ]] && continue
+            if [[ $WB_RC -eq 0 ]]; then _info "  ${line}"; else _error "  ${line}"; fi
+        done < "${WB_ERR}"
+        rm -f "${WB_ERR}"
+        if [[ $WB_RC -eq 0 ]]; then
             _info "  Wrote ${TARGET_DIR}/.libro-manifest.json"
         else
-            _warn "Manifest writeback failed (non-fatal). Install bytes are on disk."
+            _error "INSTALL INCOMPLETE: install record not written (writeback exit ${WB_RC}). Skill files are on disk;"
+            _error "  nothing proves what was installed. Fix the cause and re-run, or --rollback to the backup."
+            INSTALL_INCOMPLETE=1
+            _set_record_aside
         fi
     fi
 fi
 
-# Post-install doctor check
+if [[ $DRY_RUN -eq 1 ]]; then
+    # Nothing was written, so there is nothing new to verify. Show the target's
+    # CURRENT state so the dry run says what an upgrade would fix.
+    _info "=== Current-state health check (dry run; nothing was written) ==="
+    do_doctor || true
+    _info "=== DRY-RUN complete: no files and no log written ==="
+    exit 0
+fi
+
+# Post-install doctor check. The run's exit status is the verdict: 0 only when
+# the record was written and the health check is HEALTHY.
 _info "=== Post-install health check ==="
-if ! do_doctor; then
-    _warn "Install completed with health check warnings. Review above."
+DOCTOR_RC=0
+do_doctor || DOCTOR_RC=$?
+if [[ $INSTALL_INCOMPLETE -eq 1 ]]; then
+    _error "=== Libro install INCOMPLETE: ${PROFILE} → ${TARGET_DIR} (no install record) ==="
+    exit 3
+elif [[ $DOCTOR_RC -ne 0 ]]; then
+    _error "=== Libro install finished with a failing health check: review the warnings above ==="
+    exit 2
 else
     _info "=== Libro install complete: ${PROFILE} → ${TARGET_DIR} ==="
 fi

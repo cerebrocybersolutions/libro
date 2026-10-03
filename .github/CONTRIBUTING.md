@@ -2,7 +2,7 @@
 
 Thanks for considering a contribution. Libro is an opinionated Ops scaffold for Claude Code — it ships a small core (seven shipped skills + three dispatch helpers + the install/uninstall surface) and a profile system that wraps them.
 
-This is an alpha (`v0.2.x-alpha`). The API shape, manifest schema, and skill layout may break between minor releases. Please factor that in before investing significant time.
+This is an alpha (`v0.3.x-alpha`). The API shape, manifest schema, and skill layout may break between minor releases. Please factor that in before investing significant time.
 
 ## Before you start
 
@@ -32,7 +32,7 @@ This is an alpha (`v0.2.x-alpha`). The API shape, manifest schema, and skill lay
 3. Run the smoke install yourself before opening the PR:
    ```bash
    bash install.sh --profile libro-core --target /tmp/libro-pr-test --yes
-   /tmp/libro-pr-test/.claude/skills/cerebro-doctor/Scripts/doctor.py
+   /tmp/libro-pr-test/.claude/skills/cerebro-doctor/scripts/doctor.py
    bash uninstall.sh --target /tmp/libro-pr-test --yes
    ```
 4. Open the PR with a clear title and reference the issue it closes (`Fixes #N`).

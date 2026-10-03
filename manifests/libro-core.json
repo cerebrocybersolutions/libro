@@ -2,7 +2,7 @@
   "$schema": "../profile.schema.json",
   "spec_version": "1.0.0",
   "name": "libro-core",
-  "version": "0.2.0-alpha",
+  "version": "0.3.0-alpha",
   "parent_profile": null,
   "audience": "First-time install — solopreneurs and small-team operators evaluating 'is Libro for me?'. Non-technical-friendly.",
   "additive_modules": {

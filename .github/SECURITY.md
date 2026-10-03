@@ -6,8 +6,8 @@ Libro ships pre-1.0 alpha releases. The latest tagged release on `main` is the o
 
 | Version       | Supported          |
 | ------------- | ------------------ |
-| 0.2.x-alpha   | :white_check_mark: |
-| < 0.2.0-alpha | :x:                |
+| 0.3.x-alpha   | :white_check_mark: |
+| < 0.3.0-alpha | :x: (upgrade with [`UPGRADING.md`](../UPGRADING.md)) |
 
 ## Reporting a security issue
 

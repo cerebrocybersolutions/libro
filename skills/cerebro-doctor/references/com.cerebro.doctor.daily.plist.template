@@ -49,7 +49,7 @@
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>{{WORKSPACE_ROOT}}/master-brain/skills/cerebro-doctor/Scripts/run_daily.sh</string>
+        <string>{{WORKSPACE_ROOT}}/master-brain/skills/cerebro-doctor/scripts/run_daily.sh</string>
     </array>
 
     <key>EnvironmentVariables</key>

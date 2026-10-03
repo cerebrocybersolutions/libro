@@ -96,7 +96,7 @@ See `references/stage2_read.md`
 
 ```bash
 cd {brain_root}                     # or: export CLAUDE_PROJECT_DIR={brain_root}
-.claude/skills/sessionstart/Scripts/brief_loader.sh --dept <dept> --shape <dept-work|ops-infra|mixed>
+.claude/skills/sessionstart/scripts/brief_loader.sh --dept <dept> --shape <dept-work|ops-infra|mixed>
 ```
 
 Sections emitted (always in this order, demarcated by `===NAME===` sentinels):
@@ -136,8 +136,8 @@ Also runs infrastructure probes when session shape = `ops-infra`:
 - Any process lock in progress?
 
 **Optional probes (run if installed; skip silently if absent):**
-- **Skill discoverability lint** — `{brain_root}/mission-control/skills/skill-discoverability-lint/Scripts/lint.py` (optional). If present, surface any CRITICAL findings in the Stage 3 brief under "⚠️ Skill Drift". WARN/INFO: omit unless asked. Exit 0 always — never blocks session open. Not bundled in V1 profiles; install separately if you want the probe.
-- **Handoff closure audit** — `{brain_root}/mission-control/skills/handoff-closure-audit/Scripts/audit.py` (optional). If present, surface DRIFT count only in Stage 3 brief if > 0. Full list on request. Not bundled in V1 profiles; install separately if you want the probe.
+- **Skill discoverability lint**: `{brain_root}/mission-control/skills/skill-discoverability-lint/scripts/lint.py` (optional). If present, surface any CRITICAL findings in the Stage 3 brief under "⚠️ Skill Drift". WARN/INFO: omit unless asked. Exit 0 always; never blocks session open. Not bundled in V1 profiles; install separately if you want the probe.
+- **Handoff closure audit**: `{brain_root}/mission-control/skills/handoff-closure-audit/scripts/audit.py` (optional). If present, surface DRIFT count only in Stage 3 brief if > 0. Full list on request. Not bundled in V1 profiles; install separately if you want the probe.
 
 **Recursion guard.** A correction is itself a memory claim. Before any correction is queued for Stage 5, re-run the falsification probe against the *source* claim — including absence claims ("file X does NOT exist", "skill Y is NOT installed", "operator action required: do Z"). Restated claims surviving a context-compaction event are memory claims regardless of where they appear. Verify before firing, verify before restating. See `references/stage25_verify.md` §Recursion-rule.
 

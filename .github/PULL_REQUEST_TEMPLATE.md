@@ -37,7 +37,7 @@ Confirm the install + doctor + uninstall cycle still passes on at least one prof
 
 ```bash
 bash install.sh --profile libro-core --target /tmp/libro-pr --yes
-/tmp/libro-pr/.claude/skills/cerebro-doctor/Scripts/doctor.py
+/tmp/libro-pr/.claude/skills/cerebro-doctor/scripts/doctor.py
 bash uninstall.sh --target /tmp/libro-pr --yes
 ```
 

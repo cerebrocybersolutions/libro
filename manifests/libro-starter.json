@@ -1,0 +1,26 @@
+{
+  "$schema": "../profile.schema.json",
+  "spec_version": "1.0.0",
+  "name": "libro-starter",
+  "version": "0.3.0-alpha",
+  "parent_profile": "libro-core",
+  "audience": "Anyone setting up an AI they run on their own machine for the first time. libro-core plus three plain day-one skills: a ranked daily brief, a yes/no decision call, and a recall of what you did. Free. This profile replaces the separate Operator AI Starter Kit download.",
+  "additive_modules": {
+    "skills": [
+      "daily-brief",
+      "decision",
+      "memory-recall"
+    ],
+    "brain_scaffold": [],
+    "runner_components": []
+  },
+  "price_tier": "free",
+  "landing_copy": "templates/landing/landing-copy-starter.md",
+  "starter_skill_optional": "daily-brief",
+  "host_provided_dependencies": [],
+  "bundle_size_goal": {
+    "max_skills": 15,
+    "max_install_seconds": 60
+  },
+  "_note": "libro-starter extends libro-core with the three skills that used to ship as the Operator AI Starter Kit zip. They are single SKILL.md files with no scripts, no network access of their own, and no operator identity baked in. memory-recall reads the Brain that libro-core scaffolds (sessions, decisions, awareness, dashboard), so it works on day one and gets sharper as sessionend writes session notes."
+}

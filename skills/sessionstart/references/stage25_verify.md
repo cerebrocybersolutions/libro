@@ -31,7 +31,7 @@ For each memory file flagged P1 in Stage 2 (example: `project_ruflo_ingest_filte
 | "ruflo-main not filtered" | `find master-brain/knowledge-vault -type d -name ruflo-main` | Result in `raw/processed/` = MITIGATED |
 | "Tier 3 rename not done" | `ls govcon/` vs. `ls -d */brain 2>/dev/null` | If some depts have `brain/`, partial drift |
 | "Skill X has no source-of-truth seed" | `ls master-brain/skills/X/SKILL.md` | File exists = CLOSED |
-| "Heartbeat not wired" | `grep -l heartbeat master-brain/skills/*/Scripts/*.py` | Match = WIRED |
+| "Heartbeat not wired" | `grep -l heartbeat master-brain/skills/*/[Ss]cripts/*.py` | Match = WIRED |
 | "olw heavy = qwen2.5:14b" | `grep heavy master-brain/knowledge-vault/wiki.toml` | Current value = ground truth |
 | "dept CLAUDE.md exists" (NEW v2.1 — Gap 4) | `ls {dept}/CLAUDE.md` | Missing = dept not scaffolded for per-dept pattern — surface as drift, recommend scaffold next |
 

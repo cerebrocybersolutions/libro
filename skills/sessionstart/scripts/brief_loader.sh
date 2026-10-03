@@ -216,7 +216,7 @@ fi
 
 # 8. Fleet probe
 emit_section "FLEET_PROBE"
-FLEET="${PROJECT_DIR}/master-brain/skills/sessionstart/Scripts/fleet_probe.py"
+FLEET="${PROJECT_DIR}/master-brain/skills/sessionstart/scripts/fleet_probe.py"
 if [[ -f "$FLEET" ]]; then
   python3 "$FLEET" 2>/dev/null || emit_skip "fleet probe timeout or error"
 else
@@ -257,7 +257,7 @@ fi
 
 # 9b. Source-tag lint (memory frontmatter write-time enforcement probe)
 emit_section "SOURCE_TAG_LINT"
-STAG="${PROJECT_DIR}/master-brain/skills/source-tag-lint/Scripts/lint.py"
+STAG="${PROJECT_DIR}/master-brain/skills/source-tag-lint/scripts/lint.py"
 if [[ -f "$STAG" ]]; then
   python3 "$STAG" --summary 2>/dev/null || emit_skip "source-tag-lint error"
 else

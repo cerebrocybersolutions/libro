@@ -43,7 +43,7 @@ script, no LLM in the loop.
 ## How to run
 
 ```bash
-python3 {brain_root}/skills/cerebro-doctor/Scripts/check_resolvable.py
+python3 {brain_root}/skills/cerebro-doctor/scripts/check_resolvable.py
 ```
 
 Optional flags:

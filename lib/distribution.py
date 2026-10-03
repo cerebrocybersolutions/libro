@@ -36,8 +36,10 @@ References:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
+import stat
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -289,29 +291,136 @@ def write_installed_manifest(
         # Stored under a sub-key so the top-level schema stays predictable.
         record["extra"] = dict(extra)
 
+    present = find_excluded_leaks(target_dir)
+    if present:
+        # Libro never writes these paths (exclusion_violations() refuses before
+        # this function runs), so anything here belongs to the operator. Record
+        # it explicitly instead of passing over it in silence.
+        record["user_owned_excluded_paths_present"] = present
+
+    # Write to a temp file and rename into place, so a failed write leaves either
+    # the previous record or nothing, never a half-written file.
     out_path = target_dir / ".libro-manifest.json"
-    out_path.write_text(
-        json.dumps(record, indent=2, sort_keys=False) + "\n",
-        encoding="utf-8",
-    )
+    tmp_path = target_dir / ".libro-manifest.json.tmp"
+    try:
+        tmp_path.write_text(
+            json.dumps(record, indent=2, sort_keys=False) + "\n",
+            encoding="utf-8",
+        )
+        os.replace(tmp_path, out_path)
+    finally:
+        if tmp_path.exists() and tmp_path.is_file():
+            tmp_path.unlink()
     return out_path
+
+
+def excluded_prefixes(chain: List[LibroManifest]) -> List[str]:
+    """Every path Libro must never install: the built-in list plus each
+    profile's ``excluded_paths`` (trailing slashes dropped)."""
+    out = set(EXCLUDE_AT_INSTALL_TIME)
+    for m in chain:
+        for p in m.raw.get("excluded_paths", []) or []:
+            p = str(p).strip().strip("/")
+            if p:
+                out.add(p)
+    return sorted(out)
+
+
+def exclusion_violations(
+    chain: List[LibroManifest],
+    installed_skills: List[str],
+    installed_scaffold: List[str],
+) -> List[str]:
+    """Installed paths that fall on or under an excluded path. Any entry here is
+    a packaging defect: the install must be refused, not recorded as healthy."""
+    excluded = excluded_prefixes(chain)
+    installed = list(installed_scaffold) + [f".claude/skills/{s}" for s in installed_skills]
+    bad: List[str] = []
+    for rel in sorted(set(installed)):
+        norm = rel.strip().strip("/")
+        for ex in excluded:
+            if norm == ex or norm.startswith(ex + "/"):
+                bad.append(f"{rel} (excluded: {ex})")
+                break
+    return bad
 
 
 def find_excluded_leaks(target_dir: Path) -> List[str]:
     """Return any EXCLUDE_AT_INSTALL_TIME paths found inside target_dir.
 
-    Returns a list of relative paths (POSIX-form). Empty list = clean.
-    Cheap second-look gate for install.sh post-install — bundle-build is
-    the authoritative checker, this is just defense-in-depth.
+    Returns a list of relative paths (POSIX-form). Empty list = clean. Libro
+    never writes these, so a hit means the operator created the path; it is
+    recorded in the install record and reported, never treated as a pass or
+    silently ignored.
     """
     found: List[str] = []
     if not target_dir.is_dir():
         return found
-    for rel in EXCLUDE_AT_INSTALL_TIME:
+    for rel in sorted(EXCLUDE_AT_INSTALL_TIME):
         candidate = target_dir / rel
         if candidate.exists():
             found.append(rel)
     return found
+
+
+# --------------------------------------------------------------------------- #
+# Tree comparison (upgrade path)
+# --------------------------------------------------------------------------- #
+
+
+IGNORED_DIRS = frozenset({"__pycache__"})
+IGNORED_FILES = frozenset({".DS_Store"})
+
+
+def tree_fingerprint(root: Path) -> Dict[str, str]:
+    """Map every entry under root to a fingerprint, keyed by its STORED relative path.
+
+    os.walk reports names as they are stored on disk, so a folder stored as
+    ``Scripts`` and one stored as ``scripts`` produce different keys even on a
+    case-insensitive filesystem (default macOS), where opening either name reaches
+    the same folder. That is the property the upgrade path needs: a compare that
+    opened files by name would call a ``Scripts/`` install identical to a
+    ``scripts/`` source and skip the migration.
+
+    Directories fingerprint as ``dir``; files as ``file:<x|->:<sha256>`` where x
+    marks the owner-executable bit; symlinks as ``link:<target>``. Runtime
+    litter (``__pycache__``, ``*.pyc``, ``.DS_Store``) is ignored, so running a
+    skill's scripts does not make an up-to-date install look changed.
+    """
+    out: Dict[str, str] = {}
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = sorted(d for d in dirnames if d not in IGNORED_DIRS)
+        base = Path(dirpath)
+        for d in dirnames:
+            full = base / d
+            rel = full.relative_to(root).as_posix()
+            out[rel] = f"link:{os.readlink(full)}" if full.is_symlink() else "dir"
+        for f in sorted(filenames):
+            if f in IGNORED_FILES or f.endswith(".pyc"):
+                continue
+            full = base / f
+            rel = full.relative_to(root).as_posix()
+            if full.is_symlink():
+                out[rel] = f"link:{os.readlink(full)}"
+                continue
+            mode = full.stat().st_mode
+            digest = hashlib.sha256(full.read_bytes()).hexdigest()
+            out[rel] = f"file:{'x' if mode & stat.S_IXUSR else '-'}:{digest}"
+    return out
+
+
+def tree_delta(src: Path, dst: Path) -> List[str]:
+    """Human-readable differences between two trees (empty list = identical)."""
+    a, b = tree_fingerprint(src), tree_fingerprint(dst)
+    lines: List[str] = []
+    for rel in sorted(set(a) | set(b)):
+        if rel not in b:
+            lines.append(f"only in source: {rel}")
+        elif rel not in a:
+            lines.append(f"only in installed copy: {rel}")
+        elif a[rel] != b[rel]:
+            lines.append(f"differs: {rel}")
+    return lines
 
 
 # --------------------------------------------------------------------------- #
@@ -341,7 +450,7 @@ def _cmd_resolve_chain(args: argparse.Namespace) -> int:
     Output shape (root-first):
       {
         "chain": [
-          {"name": "libro-core", "version": "0.1.0-...", "path": "..."},
+          {"name": "libro-core", "version": "0.3.0-alpha", "path": "..."},
           ...
         ],
         "skills": ["brain-setup", "sessionstart", ...],
@@ -381,7 +490,11 @@ def _cmd_resolve_chain(args: argparse.Namespace) -> int:
 
 
 def _cmd_writeback(args: argparse.Namespace) -> int:
-    """Write .libro-manifest.json to target_dir after a successful install."""
+    """Write .libro-manifest.json to target_dir after a successful install.
+
+    Exit codes: 0 written; 1 chain error or the write failed; 4 an installed
+    path falls under an excluded path (nothing is written; install.sh refuses).
+    """
     target = Path(args.target)
     manifests_dir = Path(args.manifests_dir)
     try:
@@ -392,6 +505,15 @@ def _cmd_writeback(args: argparse.Namespace) -> int:
 
     installed_skills = _split_arg_list(args.installed_skills)
     installed_scaffold = _split_arg_list(args.installed_scaffold)
+
+    violations = exclusion_violations(chain, installed_skills, installed_scaffold)
+    if violations:
+        print(
+            f"EXCLUSION VIOLATION: {len(violations)} installed path(s) fall under an excluded path; "
+            f"refusing to write an install record: {'; '.join(violations)}",
+            file=sys.stderr,
+        )
+        return 4
 
     extra: Dict[str, Any] = {}
     if args.bundle_sha:
@@ -413,16 +535,111 @@ def _cmd_writeback(args: argparse.Namespace) -> int:
 
     leaks = find_excluded_leaks(target)
     if leaks:
-        # Non-fatal — informational. install.sh decides whether to halt.
-        # Reported to stderr so stdout stays parseable.
+        # Libro did not write these (the violation check above refuses that), so
+        # they are operator-owned. Reported on stderr so stdout stays parseable,
+        # and recorded in the install record under user_owned_excluded_paths_present.
         print(
-            f"LEAK WARNING: {len(leaks)} excluded path(s) present in target: "
-            f"{', '.join(leaks)}",
+            f"NOTE: {len(leaks)} excluded path(s) exist in the target and were left untouched "
+            f"(not installed by Libro; recorded in the install record): {', '.join(leaks)}",
             file=sys.stderr,
         )
 
     print(str(out_path))
     return 0
+
+
+def verify_install_record(target_dir: Path, manifests_dir: Path) -> List[str]:
+    """Check the install record at target_dir. Returns problem lines, each
+    prefixed MISSING, BAD, DRIFT or BEHIND; an empty list means the record
+    exists, is readable, lists at least one skill, matches what is on disk, and
+    records the version this checkout ships for its profile.
+
+    A missing or unreadable record is a problem, never a pass: the record is
+    the only proof of what was installed, and the upgrade path reads it.
+    """
+    path = target_dir / ".libro-manifest.json"
+    if not path.exists():
+        return ["MISSING install record .libro-manifest.json: nothing proves what was installed; re-run ./install.sh"]
+    try:
+        d = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(d, dict):
+            raise ValueError("not a JSON object")
+    except (OSError, ValueError) as exc:
+        return [f"BAD install record unreadable ({exc}); re-run ./install.sh"]
+    skills = d.get("installed_skills")
+    scaffold = d.get("installed_scaffold", [])
+    if not isinstance(skills, list) or not skills:
+        return ["BAD install record lists no installed skills; re-run ./install.sh"]
+    if not isinstance(scaffold, list):
+        return ["BAD install record installed_scaffold is not a list; re-run ./install.sh"]
+    problems: List[str] = []
+    for s in skills:
+        if not (target_dir / ".claude" / "skills" / str(s)).is_dir():
+            problems.append(f"DRIFT skill '{s}' is in the install record but missing from .claude/skills/")
+    for rel in scaffold:
+        if not (target_dir / str(rel)).is_file():
+            problems.append(f"DRIFT scaffold '{rel}' is in the install record but missing from the target")
+    profile, version = str(d.get("profile", "")), str(d.get("version", ""))
+    try:
+        want = LibroManifest.load(manifests_dir / f"{profile}.json").version
+    except ManifestError:
+        problems.append(f"BEHIND profile '{profile}' in the install record is not shipped by this checkout")
+    else:
+        if version != want:
+            problems.append(f"BEHIND install record says {profile} {version}; this checkout ships {want}; "
+                            f"run ./install.sh --target {target_dir} to upgrade")
+    return problems
+
+
+def _cmd_verify_record(args: argparse.Namespace) -> int:
+    """Print one line per install-record problem; exit 0 only if there are none."""
+    problems = verify_install_record(Path(args.target), Path(args.manifests_dir))
+    for p in problems:
+        print(p)
+    return 0 if not problems else 1
+
+
+def _cmd_check_exclusions(args: argparse.Namespace) -> int:
+    """Pre-install gate: exit 4 if the resolved profile would install any path on
+    or under an excluded path, 1 on a chain error, 0 if clean. install.sh runs
+    this before it touches the target, so a bad manifest never half-installs."""
+    try:
+        chain = resolve_chain(Path(args.manifests_dir), args.profile)
+    except (ChainError, ManifestError) as exc:
+        print(f"CHAIN ERROR: {exc}", file=sys.stderr)
+        return 1
+    skills: List[str] = []
+    scaffold: List[str] = []
+    for m in chain:
+        skills += m.skills()
+        scaffold += m.brain_scaffold()
+    violations = exclusion_violations(chain, skills, scaffold)
+    if violations:
+        print(
+            f"EXCLUSION VIOLATION: profile '{args.profile}' would install {len(violations)} "
+            f"excluded path(s): {'; '.join(violations)}",
+            file=sys.stderr,
+        )
+        return 4
+    print(f"OK: no profile path falls under {', '.join(excluded_prefixes(chain))}")
+    return 0
+
+
+def _cmd_tree_equal(args: argparse.Namespace) -> int:
+    """Exit 0 if the two trees match (stored names, bytes, exec bit), 1 if not.
+
+    With --verbose, prints each difference to stdout. Exit 2 if either path is
+    not a directory.
+    """
+    src, dst = Path(args.src), Path(args.dst)
+    if not src.is_dir() or not dst.is_dir():
+        print(f"TREE ERROR: not a directory: {src if not src.is_dir() else dst}", file=sys.stderr)
+        return 2
+    delta = tree_delta(src, dst)
+    if args.verbose:
+        for line in delta:
+            print(line)
+    return 0 if not delta else 1
 
 
 def _split_arg_list(raw: str) -> List[str]:
@@ -475,6 +692,31 @@ def main(argv: Optional[List[str]] = None) -> int:
     sp_w.add_argument("--bundle-sha", default=None)
     sp_w.add_argument("--source-root", default=None)
     sp_w.set_defaults(func=_cmd_writeback)
+
+    sp_r = sub.add_parser(
+        "verify-record",
+        help="Check the target's .libro-manifest.json against disk and this checkout",
+    )
+    sp_r.add_argument("--target", required=True)
+    sp_r.add_argument("--manifests-dir", required=True)
+    sp_r.set_defaults(func=_cmd_verify_record)
+
+    sp_x = sub.add_parser(
+        "check-exclusions",
+        help="Exit 4 if a profile would install a path under an excluded path",
+    )
+    sp_x.add_argument("--manifests-dir", required=True)
+    sp_x.add_argument("--profile", required=True)
+    sp_x.set_defaults(func=_cmd_check_exclusions)
+
+    sp_t = sub.add_parser(
+        "tree-equal",
+        help="Exit 0 if two directory trees match (stored names, bytes, exec bit)",
+    )
+    sp_t.add_argument("--src", required=True)
+    sp_t.add_argument("--dst", required=True)
+    sp_t.add_argument("--verbose", action="store_true")
+    sp_t.set_defaults(func=_cmd_tree_equal)
 
     args = parser.parse_args(argv)
     return int(args.func(args))

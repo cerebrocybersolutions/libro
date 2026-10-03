@@ -13,8 +13,8 @@ Exit 0 always (advisory / Cron-able weekly check, never blocks).
 Scope contract: read-only. Python stdlib only. No network.
 
 Usage:
-  python3 master-brain/skills/cerebro-doctor/Scripts/check_canonical_drift.py
-  python3 master-brain/skills/cerebro-doctor/Scripts/check_canonical_drift.py --json
+  python3 master-brain/skills/cerebro-doctor/scripts/check_canonical_drift.py
+  python3 master-brain/skills/cerebro-doctor/scripts/check_canonical_drift.py --json
 """
 
 from __future__ import annotations

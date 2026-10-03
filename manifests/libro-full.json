@@ -2,7 +2,7 @@
   "$schema": "../profile.schema.json",
   "spec_version": "1.0.0",
   "name": "libro-full",
-  "version": "0.2.0-alpha",
+  "version": "0.3.0-alpha",
   "parent_profile": "libro-core",
   "audience": "Libro power users and partners who want the full Libro-eligible skill surface. The operator is expected to be comfortable with the full Brain architecture, session rituals, and dispatch.",
   "additive_modules": {

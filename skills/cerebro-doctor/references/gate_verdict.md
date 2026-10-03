@@ -25,11 +25,11 @@ last_evaluated: 2026-05-08
 ## What lands this at green
 
 1. Add resolver intents row to `master-brain/AGENTS.md`.
-2. Scaffold `Scripts/tests/fixtures/` from `_template/`.
+2. Scaffold `scripts/tests/fixtures/` from `_template/`.
 3. Explicit failure-mode table in SKILL.md body.
 4. Wet-smoke against live `master-brain/skills/` tree — expect clean exit 0.
 
-*Verdict skeleton-v0 locked 2026-05-08. Next revisit: when Scripts/ test harness lands.*
+*Verdict skeleton-v0 locked 2026-05-08. Next revisit: when scripts/ test harness lands.*
 
 <!-- AUTOLINK-START — Obsidian wikilink graph backfill (idempotent; safe to re-run) -->
 
