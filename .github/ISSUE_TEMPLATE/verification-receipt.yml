@@ -1,0 +1,50 @@
+name: Verification receipt
+description: You checked a Cerebro evidence ledger bundle from a release here and it passed
+title: "[receipt] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form after you check an evidence ledger bundle attached to a release in this repository.
+
+        When every check passes, `verify_bundle.py` prints one line that starts with `RECEIPT`. Paste that line below. If you checked by hand with `RECIPE.md`, fill in the same fields yourself: `sha256sum MANIFEST.json` gives the bundle's sha256.
+
+        A receipt records that someone outside Cerebro ran the check. If a check failed, open a bug report instead and include the `FAIL` line.
+
+  - type: textarea
+    id: receipt
+    attributes:
+      label: RECEIPT line
+      description: The full line printed by `python3 verify_bundle.py --by "WHO"`, or the same fields typed by hand.
+      placeholder: 'RECEIPT {"receipt": "cerebro-ledger-bundle-verification/1", "bundle_sha256": "...", ...}'
+      render: json
+    validations:
+      required: true
+
+  - type: dropdown
+    id: method
+    attributes:
+      label: How did you check it?
+      options:
+        - verify_bundle.py
+        - By hand with RECIPE.md (ssh-keygen, OpenSSL and the hashing snippet)
+        - Both
+    validations:
+      required: true
+
+  - type: input
+    id: tools
+    attributes:
+      label: Tool versions
+      description: Output of `ssh -V` and `openssl version`
+      placeholder: "OpenSSH_9.9p2, OpenSSL 3.5.1"
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Anything that did not work the first time, or a step the recipe should explain better.
+    validations:
+      required: false
