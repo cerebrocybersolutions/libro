@@ -7,16 +7,16 @@ body:
       value: |
         Use this form after you check an evidence ledger bundle attached to a release in this repository.
 
-        When every check passes, `verify_bundle.py` prints one line that starts with `RECEIPT`. Paste that line below. If you checked by hand with `RECIPE.md`, fill in the same fields yourself: `sha256sum MANIFEST.json` gives the bundle's sha256.
+        When every check passes, `verify_bundle.py` prints one line that starts with `RECEIPT`. Paste that line below. If you checked by hand with `RECIPE.md`, fill in the same fields yourself: `shasum -a 256 MANIFEST.json` (or `sha256sum`) gives the bundle's sha256.
 
-        A receipt records that someone outside Cerebro ran the check. If a check failed, open a bug report instead and include the `FAIL` line.
+        A receipt records your report of the check. The name and the verification time are self reported. We compare the bundle and checker hashes with the values published on the release. If a check failed, open a bug report instead and include the `FAIL` line.
 
   - type: textarea
     id: receipt
     attributes:
       label: RECEIPT line
       description: The full line printed by `python3 verify_bundle.py --by "WHO"`, or the same fields typed by hand.
-      placeholder: 'RECEIPT {"receipt": "cerebro-ledger-bundle-verification/1", "bundle_sha256": "...", ...}'
+      placeholder: 'RECEIPT {"receipt": "cerebro-ledger-bundle-verification/2", "bundle_sha256": "...", ...}'
       render: json
     validations:
       required: true
