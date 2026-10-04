@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Libro ships pre-1.0 alpha releases. The latest tagged release on `main` is the only supported version; older alphas receive no backports.
+Libro ships pre-1.0 alpha releases. The latest `v` prefixed Libro release on `main` is the only supported version; evidence bundle tags are not software releases. Older alphas receive no backports.
 
 | Version       | Supported          |
 | ------------- | ------------------ |
